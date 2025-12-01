@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/Quan_Ly_Kho_Truong_Hoc.iml" filepath="$PROJECT_DIR$/.idea/Quan_Ly_Kho_Truong_Hoc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/quan_ly_kho/quan_ly_kho.iml" filepath="$PROJECT_DIR$/quan_ly_kho/quan_ly_kho.iml" />
+    </modules>
+  </component>
+</project>

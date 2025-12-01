@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body>
+
+<!-- Sidebar -->
+<div th:replace="~{layout :: sidebar('lichsu')}"></div>
+
+<!-- Header -->
+<div th:replace="~{layout :: header}"></div>
+
+<!-- Nội dung chính -->
+<div class="content">
+
+    <div class="container-fluid p-4">
+        <h2 class="mb-4">Lịch Sử Chi Tiết Mượn Trả</h2>
+
+        <!-- Form lọc -->
+        <form th:action="@{/lich-su}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="keyword"
+                       th:value="${param.keyword}" placeholder="Tìm theo Mã phiếu hoặc Tên thiết bị...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="trangThai" th:value="${param.trangThai}">
+                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="Đang mượn"
+                            th:selected="${param.trangThai == 'Đang mượn'}">Đang mượn</option>
+                    <option value="Đã trả"
+                            th:selected="${param.trangThai == 'Đã trả'}">Đã trả</option>
+                    <option value="Hư hỏng"
+                            th:selected="${param.trangThai == 'Hư hỏng'}">Hư hỏng</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Lọc
+                </button>
+            </div>
+        </form>
+
+        <!-- Bảng dữ liệu -->
+        <div class="table-responsive bg-white p-3 rounded shadow-sm">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Mã Phiếu</th>
+                    <th>Người Mượn</th>
+                    <th>Thiết Bị</th>
+                    <th>SL Mượn</th>
+                    <th>Ngày Mượn</th>
+                    <th>Ngày Trả</th>
+                    <th>Trạng Thái</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="ct : ${dsLichSu}">
+                    <td th:text="${ct.phieuMuon.maPhieu}">PM001</td>
+                    <td th:text="${ct.phieuMuon.nguoiMuonText}">Nguyễn Văn A</td>
+                    <td th:text="${ct.thietBi.tenThietBi}">Máy Chiếu Sony</td>
+                    <td th:text="${ct.soLuongMuon}">1</td>
+                    <td th:text="${#dates.format(ct.phieuMuon.ngayMuon, 'yyyy-MM-dd')}">2025-11-10</td>
+                    <td th:text="${ct.ngayTra != null ? #dates.format(ct.ngayTra, 'yyyy-MM-dd') : 'Chưa trả'}">Chưa trả</td>
+                    <td>
+                        <span th:class="${ct.trangThai == 'Đang mượn' ? 'badge text-bg-warning' :
+                                         (ct.trangThai == 'Đã trả' ? 'badge text-bg-success' : 'badge text-bg-danger')}"
+                              th:text="${ct.trangThai}">Đang mượn</span>
+                    </td>
+                </tr>
+
+                <!-- Nếu danh sách rỗng -->
+                <tr th:if="${#lists.isEmpty(dsLichSu)}">
+                    <td colspan="7" class="text-center text-muted">Không có dữ liệu</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div th:replace="~{layout :: footer}"></div>
+
+<!-- Script -->
+<div th:replace="~{layout :: scripts}"></div>
+
+</body>
+</html>

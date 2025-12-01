@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body>
+
+<!-- Sidebar -->
+<div th:replace="~{layout :: sidebar('thietbi')}"></div>
+
+<!-- Header -->
+<div th:replace="~{layout :: header}"></div>
+
+<!-- Nội dung chính -->
+<div class="content">
+
+    <div class="container-fluid p-4">
+        <h2 class="mb-4">Danh Sách Thiết Bị Tồn Kho</h2>
+
+        <!-- Form lọc tìm kiếm -->
+        <form th:action="@{/thiet-bi/search}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="keyword" placeholder="Tìm theo Mã/Tên thiết bị...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="loaiId">
+                    <option value="">-- Tất cả loại --</option>
+                    <option th:each="loai : ${dsLoaiThietBi}"
+                            th:value="${loai.id}"
+                            th:text="${loai.tenLoai}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Lọc
+                </button>
+            </div>
+        </form>
+
+        <!-- Bảng danh sách thiết bị -->
+        <div class="table-responsive bg-white p-3 rounded shadow-sm mb-4">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Mã TB</th>
+                    <th>Tên Thiết Bị</th>
+                    <th>Loại</th>
+                    <th>Tồn Kho</th>
+                    <th>Nhà Cung Cấp</th>
+                    <th>Tình Trạng</th>
+                    <th>Hành Động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="tb : ${dsThietBi}">
+                    <td th:text="${tb.maThietBi}">LAP-D5500</td>
+                    <td th:text="${tb.tenThietBi}">Laptop Dell 5500</td>
+                    <td th:text="${tb.loaiThietBi.tenLoai}">Máy Tính</td>
+                    <td th:text="${tb.soLuong}">5</td>
+                    <td th:text="${tb.nhaCungCap}">FPT</td>
+                    <td>
+                        <span th:class="${tb.tinhTrang ? 'badge text-bg-success' : 'badge text-bg-danger'}"
+                              th:text="${tb.tinhTrang ? 'Tốt' : 'Hỏng'}">
+                            Tốt
+                        </span>
+                    </td>
+                    <td>
+                        <a th:href="@{/thiet-bi/edit/{id}(id=${tb.id})}" class="btn btn-sm btn-info me-1">
+                            <i class="bi bi-pencil-square"></i> Sửa
+                        </a>
+                        <a th:href="@{/thiet-bi/delete/{id}(id=${tb.id})}" class="btn btn-sm btn-danger"
+                           onclick="return confirm('Bạn có chắc chắn muốn xóa thiết bị này?')">
+                            <i class="bi bi-trash"></i> Xóa
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Nút thêm mới -->
+        <div class="text-end">
+            <a th:href="@{/thiet-bi/add}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Thêm Thiết Bị Mới
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div th:replace="~{layout :: footer}"></div>
+
+<!-- Script -->
+<div th:replace="~{layout :: scripts}"></div>
+
+</body>
+</html>
