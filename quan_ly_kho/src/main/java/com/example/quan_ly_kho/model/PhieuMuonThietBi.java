@@ -1,7 +1,5 @@
 package com.example.quan_ly_kho.model;
 
-
-
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
@@ -11,32 +9,25 @@ import java.time.LocalDate;
 @Data
 public class PhieuMuonThietBi {
 
-    // --- Khóa chính kép ---
-    @EmbeddedId // Sử dụng lớp ID nhúng
-    private PhieuMuonThietBiId id;
+    @EmbeddedId
+    private PhieuMuonThietBiId id = new PhieuMuonThietBiId(); // ✅ tránh null
 
-    // --- Mối quan hệ Many-to-One với PhieuMuon (Khóa ngoại 1) ---
-    // @MapsId("phieuMuonId") cho biết trường này ánh xạ tới phieuMuonId trong @EmbeddedId
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("phieuMuonId")
-    @JoinColumn(name = "phieu_muon_id")
+    @JoinColumn(name = "phieu_muon_id", nullable = false)
     private PhieuMuon phieuMuon;
 
-    // --- Mối quan hệ Many-to-One với ThietBi (Khóa ngoại 2) ---
-    // @MapsId("thietBiId") cho biết trường này ánh xạ tới thietBiId trong @EmbeddedId
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("thietBiId")
-    @JoinColumn(name = "thiet_bi_id")
+    @JoinColumn(name = "thiet_bi_id", nullable = false)
     private ThietBi thietBi;
 
-    // --- Các cột dữ liệu khác ---
-
     @Column(name = "so_luong_muon", nullable = false)
-    private Integer soLuongMuon; // Số lượng thiết bị được mượn trong phiếu này
+    private Integer soLuongMuon;
 
     @Column(name = "ngay_tra")
     private LocalDate ngayTra;
 
     @Column(name = "trang_thai", length = 50)
-    private String trangThai; // Ví dụ: 'Đang mượn', 'Đã trả', 'Hư hỏng'
+    private String trangThai;
 }

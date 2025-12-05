@@ -64,7 +64,7 @@
                         </span>
                     </td>
                     <td>
-                        <a th:href="@{/thiet-bi/edit/{id}(id=${tb.id})}" class="btn btn-sm btn-info me-1">
+                        <a th:href="@{/thiet-bi/view-update/{id}(id=${tb.id})}" class="btn btn-sm btn-info me-1">
                             <i class="bi bi-pencil-square"></i> Sửa
                         </a>
                         <a th:href="@{/thiet-bi/delete/{id}(id=${tb.id})}" class="btn btn-sm btn-danger"
@@ -79,7 +79,7 @@
 
         <!-- Nút thêm mới -->
         <div class="text-end">
-            <a th:href="@{/thiet-bi/add}" class="btn btn-success">
+            <a th:href="@{/thiet-bi/view-update}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Thêm Thiết Bị Mới
             </a>
         </div>

@@ -10,7 +10,7 @@ import java.util.List;
 public class LoaiThietBi {
 
     @Id // Khóa chính
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Tự tăng
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
 

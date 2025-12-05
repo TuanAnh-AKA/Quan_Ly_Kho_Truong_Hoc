@@ -48,7 +48,7 @@
             <tr th:each="phieu : ${dsPhieuMuon}">
                 <td th:text="${phieu.id}"></td>
                 <td th:text="${phieu.maPhieu}"></td>
-                <td th:text="${#dates.format(phieu.ngayMuon, 'yyyy-MM-dd')}"></td>
+                <td th:text="${#temporals.format(phieu.ngayMuon, 'yyyy-MM-dd')}"></td>
                 <td th:text="${phieu.nguoiMuonText}"></td>
                 <td>
                             <span th:text="${phieu.trangThai ? 'Đang Mượn' : 'Đã Trả'}"
@@ -66,7 +66,7 @@
                         <i class="bi bi-trash"></i> Xóa
                     </a>
                 </td>
-            </tr>
+            </tr>#temporals.format
             </tbody>
         </table>
     </div>

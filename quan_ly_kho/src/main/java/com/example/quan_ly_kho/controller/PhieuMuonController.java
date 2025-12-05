@@ -110,7 +110,7 @@ public class PhieuMuonController {
             redirectAttributes.addFlashAttribute("dsThietBiAll", thietBiRepo.findAll());
         }
 
-        return "redirect:/phieu-muon-layout";
+        return "redirect:/phieumuon";
     }
 
 // ---------------------------------------------------------------------------------------------------
@@ -131,7 +131,7 @@ public class PhieuMuonController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống khi trả phiếu: " + e.getMessage());
         }
-        return "redirect:/phieumuon/list";
+        return "redirect:/phieumuon";
     }
 
 // ---------------------------------------------------------------------------------------------------
@@ -152,6 +152,6 @@ public class PhieuMuonController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống khi xóa phiếu: " + e.getMessage());
         }
-        return "redirect:/phieumuon/list";
+        return "redirect:/phieumuon";
     }
 }

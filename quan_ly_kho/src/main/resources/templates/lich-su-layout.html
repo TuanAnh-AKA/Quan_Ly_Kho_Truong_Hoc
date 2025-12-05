@@ -59,7 +59,7 @@
                     <td th:text="${ct.phieuMuon.nguoiMuonText}">Nguyễn Văn A</td>
                     <td th:text="${ct.thietBi.tenThietBi}">Máy Chiếu Sony</td>
                     <td th:text="${ct.soLuongMuon}">1</td>
-                    <td th:text="${#dates.format(ct.phieuMuon.ngayMuon, 'yyyy-MM-dd')}">2025-11-10</td>
+                    <td th:text="${#temporals.format(ct.phieuMuon.ngayMuon, 'yyyy-MM-dd')}">2025-11-10</td>
                     <td th:text="${ct.ngayTra != null ? #dates.format(ct.ngayTra, 'yyyy-MM-dd') : 'Chưa trả'}">Chưa trả</td>
                     <td>
                         <span th:class="${ct.trangThai == 'Đang mượn' ? 'badge text-bg-warning' :

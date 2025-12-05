@@ -48,56 +48,59 @@ public class MuonTraService {
 
 
 // ---------------------------------------------------------------------------------------------------
+@Transactional
+public PhieuMuon taoPhieuMuon(Map<Integer, Integer> thietBiMuon,
+                              String maPhieu,
+                              LocalDate ngayMuon,
+                              String nguoiMuonText) {
 
-    // --- 2. LOGIC TẠO PHIẾU MƯỢN MỚI (CREATE) ---
-
-    public PhieuMuon taoPhieuMuon(Map<Integer, Integer> thietBiMuon, String maPhieu, LocalDate ngayMuon, String nguoiMuonText) {
-
-        if (phieuMuonRepo.existsByMaPhieu(maPhieu)) {
-            throw new RuntimeException("Mã phiếu '" + maPhieu + "' đã tồn tại.");
-        }
-        if (thietBiMuon.isEmpty() || thietBiMuon.values().stream().allMatch(qty -> qty == null || qty <= 0)) {
-            throw new RuntimeException("Phải có ít nhất 1 thiết bị được chọn với số lượng > 0.");
-        }
-
-        PhieuMuon pm = new PhieuMuon();
-        pm.setMaPhieu(maPhieu);
-        pm.setNgayMuon(ngayMuon);
-        pm.setNguoiMuonText(nguoiMuonText);
-        pm.setTrangThai(true); // Đang mượn
-        PhieuMuon savedPm = phieuMuonRepo.save(pm);
-
-        for (Map.Entry<Integer, Integer> entry : thietBiMuon.entrySet()) {
-            Integer thietBiId = entry.getKey();
-            Integer soLuongMuon = entry.getValue();
-
-            if (soLuongMuon == null || soLuongMuon <= 0) continue;
-
-            ThietBi tb = thietBiRepo.findById(thietBiId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy thiết bị ID: " + thietBiId));
-
-            if (soLuongMuon > tb.getSoLuong()) {
-                // Nếu có lỗi tồn kho, Transaction sẽ Rollback, không có gì được lưu
-                throw new RuntimeException("Không đủ tồn kho (" + tb.getSoLuong() + ") để mượn " + soLuongMuon + " chiếc " + tb.getTenThietBi());
-            }
-
-            // TRỪ TỒN KHO VÀ CẬP NHẬT CỜ HIỆU
-            tb.setSoLuong(tb.getSoLuong() - soLuongMuon);
-            tb.setDaMuon(tb.getSoLuong() == 0); // Đặt cờ là true nếu tồn kho = 0
-            thietBiRepo.save(tb);
-
-            // TẠO CHI TIẾT PHIẾU
-            PhieuMuonThietBi ct = new PhieuMuonThietBi();
-            ct.setPhieuMuon(savedPm);
-            ct.setThietBi(tb);
-            ct.setSoLuongMuon(soLuongMuon);
-            ct.setTrangThai("Đang mượn");
-            ctRepo.save(ct);
-        }
-
-        return savedPm;
+    if (phieuMuonRepo.existsByMaPhieu(maPhieu)) {
+        throw new RuntimeException("Mã phiếu '" + maPhieu + "' đã tồn tại.");
     }
 
+    if (thietBiMuon.isEmpty() ||
+            thietBiMuon.values().stream().allMatch(qty -> qty == null || qty <= 0)) {
+        throw new RuntimeException("Phải có ít nhất 1 thiết bị được chọn với số lượng > 0.");
+    }
+
+    // --- Tạo phiếu mượn chính ---
+    PhieuMuon pm = new PhieuMuon();
+    pm.setMaPhieu(maPhieu);
+    pm.setNgayMuon(ngayMuon);
+    pm.setNguoiMuonText(nguoiMuonText);
+    pm.setTrangThai(true); // true = Đang mượn
+    PhieuMuon savedPm = phieuMuonRepo.save(pm);
+
+    // --- Duyệt danh sách thiết bị được mượn ---
+    for (Map.Entry<Integer, Integer> entry : thietBiMuon.entrySet()) {
+        Integer thietBiId = entry.getKey();
+        Integer soLuongMuon = entry.getValue();
+
+        if (soLuongMuon == null || soLuongMuon <= 0) continue;
+
+        ThietBi tb = thietBiRepo.findById(thietBiId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy thiết bị ID: " + thietBiId));
+
+        if (soLuongMuon > tb.getSoLuong()) {
+            throw new RuntimeException("Không đủ tồn kho (" + tb.getSoLuong() + ") để mượn " + soLuongMuon + " chiếc " + tb.getTenThietBi());
+        }
+
+        // Cập nhật tồn kho
+        tb.setSoLuong(tb.getSoLuong() - soLuongMuon);
+        tb.setDaMuon(tb.getSoLuong() == 0);
+        thietBiRepo.save(tb);
+
+        // Tạo chi tiết phiếu
+        PhieuMuonThietBi ct = new PhieuMuonThietBi();
+        ct.setPhieuMuon(savedPm);
+        ct.setThietBi(tb);
+        ct.setSoLuongMuon(soLuongMuon);
+        ct.setTrangThai("Đang mượn");
+        ctRepo.save(ct);
+    }
+
+    return savedPm;
+}
 
 // ---------------------------------------------------------------------------------------------------
 

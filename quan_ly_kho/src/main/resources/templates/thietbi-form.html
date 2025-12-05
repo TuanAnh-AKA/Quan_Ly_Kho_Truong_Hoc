@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body>
+
+<div th:replace="~{layout :: sidebar('thietbi')}"></div>
+
+<div th:replace="~{layout :: header}"></div>
+
+<div class="content">
+    <div class="container mt-5">
+        <h2 class="mb-4" th:text="${thietBi.id != null ? '📝 Cập Nhật Thiết Bị' : '➕ Thêm Thiết Bị Mới'}"></h2>
+
+        <form th:action="@{/thiet-bi/save}" th:object="${thietBi}" method="post" class="needs-validation" novalidate>
+
+            <input type="hidden" th:field="*{id}" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="maThietBi" class="form-label">Mã Thiết Bị (<span class="text-danger">*</span>)</label>
+                    <input type="text" th:field="*{maThietBi}" class="form-control" id="maThietBi"
+                           th:readonly="${thietBi.id != null}" required>
+                    <div class="invalid-feedback">Vui lòng nhập Mã Thiết Bị.</div>
+                    <small th:if="${thietBi.id != null}" class="form-text text-muted">Mã thiết bị không thể thay đổi sau khi tạo.</small>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="tenThietBi" class="form-label">Tên Thiết Bị (<span class="text-danger">*</span>)</label>
+                    <input type="text" th:field="*{tenThietBi}" class="form-control" id="tenThietBi" required>
+                    <div class="invalid-feedback">Vui lòng nhập Tên Thiết Bị.</div>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="soLuong" class="form-label">Số Lượng (<span class="text-danger">*</span>)</label>
+                    <input type="number" th:field="*{soLuong}" class="form-control" id="soLuong" min="0" required>
+                    <div class="invalid-feedback">Số Lượng phải là số nguyên dương.</div>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="ngayNhap" class="form-label">Ngày Nhập (<span class="text-danger">*</span>)</label>
+                    <input type="date" th:field="*{ngayNhap}" class="form-control" id="ngayNhap" required>
+                    <div class="invalid-feedback">Vui lòng chọn Ngày Nhập.</div>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="nhaCungCap" class="form-label">Nhà Cung Cấp</label>
+                    <input type="text" th:field="*{nhaCungCap}" class="form-control" id="nhaCungCap">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="loaiThietBi" class="form-label">Loại Thiết Bị (<span class="text-danger">*</span>)</label>
+                    <select th:field="*{loaiThietBi.id}" id="loaiThietBi" class="form-select" required>
+                        <option value="">-- Chọn Loại Thiết Bị --</option>
+                        <option th:each="loai : ${dsLoaiThietBi}"
+                                th:value="${loai.id}"
+                                th:text="${loai.tenLoai}">
+                            Tên Loại Thiết Bị
+                        </option>
+                    </select>
+                    <div class="invalid-feedback">Vui lòng chọn một Loại Thiết Bị.</div>
+                </div>
+
+                <div class="col-12">
+                    <label for="moTa" class="form-label">Mô tả</label>
+                    <textarea th:field="*{moTa}" class="form-control" id="moTa" rows="3"></textarea>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <span th:text="${thietBi.id != null ? 'Cập Nhật' : 'Lưu Thiết Bị'}">Lưu Thiết Bị</span>
+                    </button>
+                    <a th:href="@{/thiet-bi}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Hủy
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // JavaScript cho Bootstrap Form Validation
+        (() => {
+            'use strict'
+            const forms = document.querySelectorAll('.needs-validation')
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+</div>
+
+<div th:replace="~{layout :: footer}"></div>
+
+<div th:replace="~{layout :: scripts}"></div>
+
+</body>
+</html>

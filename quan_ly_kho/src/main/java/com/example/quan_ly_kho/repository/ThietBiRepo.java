@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ThietBiRepo extends JpaRepository<ThietBi, Integer> {
@@ -14,4 +15,5 @@ public interface ThietBiRepo extends JpaRepository<ThietBi, Integer> {
 
     // (Thêm các phương thức tìm kiếm khác nếu cần)
     List<ThietBi> findByTenThietBiContainingIgnoreCaseOrMaThietBiContainingIgnoreCase(String ten, String ma);
+    Optional<ThietBi> findByMaThietBi(String maThietBi);
 }

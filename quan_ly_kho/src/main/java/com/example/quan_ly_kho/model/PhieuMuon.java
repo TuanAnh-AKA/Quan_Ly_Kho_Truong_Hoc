@@ -11,7 +11,7 @@ import java.util.List;
 @Data // Lombok: Tự động tạo getter, setter, toString, equals, hashCode
 public class PhieuMuon {
     @Id // Khóa chính
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Tự tăng (IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
 
