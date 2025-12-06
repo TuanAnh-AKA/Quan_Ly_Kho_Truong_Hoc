@@ -5,6 +5,8 @@ import com.example.quan_ly_kho.model.LoaiThietBi;
 import com.example.quan_ly_kho.repository.LoaiThietBiRepo;
 import com.example.quan_ly_kho.repository.ThietBiRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -84,6 +86,7 @@ public class ThietBiService {
         thietBiRepository.deleteById(id);
     }
 
-    // GHI CHÚ: Phương thức 'themThietBi' ban đầu của bạn đã được tích hợp vào 'save'
-    // để tránh trùng lặp logic, nên có thể xóa phương thức 'themThietBi' cũ đi.
+    public Page<ThietBi> findAllThietBi(Pageable pageable) {
+        return thietBiRepository.findAll(pageable);
+    }
 }

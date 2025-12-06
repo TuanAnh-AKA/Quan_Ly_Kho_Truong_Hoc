@@ -8,8 +8,10 @@ import com.example.quan_ly_kho.repository.ThietBiRepo;
 import com.example.quan_ly_kho.service.LoaiThietBiService;
 import com.example.quan_ly_kho.service.ThietBiService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -30,18 +32,31 @@ public class ThietBiController {
 
     // --- 1. HIỂN THỊ DANH SÁCH THIẾT BỊ (READ) ---
     @GetMapping
-    public String listThietBi(Model model) {
-        // Lấy danh sách thiết bị và loại thiết bị để hiển thị bộ lọc
-        List<ThietBi> dsThietBi = thietBiRepo.findAll();
-        List<LoaiThietBi> dsLoaiThietBi = loaiThietBiRepo.findAll();
+    public String listThietBi(
+            Model model,
+            // 1. Tham số phân trang (mặc định trang 0, 10 phần tử)
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size,
+            // 2. Tham số sắp xếp (mặc định theo ID giảm dần)
+            @RequestParam(defaultValue = "id,desc") String sort)
+    {
+        // Phân tích tham số sắp xếp (ví dụ: id,desc)
+        String[] sortParams = sort.split(",");
+        Sort sortOrder = Sort.by(Sort.Direction.fromString(sortParams[1]), sortParams[0]);
 
-        model.addAttribute("dsThietBi", dsThietBi);
-        model.addAttribute("dsLoaiThietBi", dsLoaiThietBi);
+        // Tạo đối tượng Pageable
+        PageRequest pageable = PageRequest.of(page, size, sortOrder);
 
-        // Chuẩn bị một đối tượng ThietBi mới cho form Thêm/Sửa (nếu dùng chung form)
+        // Gọi Service để lấy dữ liệu đã được phân trang
+        Page<ThietBi> thietBiPage = thietBiService.findAllThietBi(pageable); // <-- Cần phương thức này trong Service
+
+            // Thêm Page object vào Model với tên "thietBiPage"
+        model.addAttribute("thietBiPage", thietBiPage);
+
+        // Vẫn giữ lại danh sách loại thiết bị và đối tượng form mới
+        model.addAttribute("dsLoaiThietBi", loaiThietBiRepo.findAll());
         model.addAttribute("thietBi", new ThietBi());
 
-        // Trả về tên file view
         return "thiet-bi-layout";
     }
 
@@ -134,9 +149,9 @@ public class ThietBiController {
     public String deleteThietBi(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
         try {
             thietBiRepo.deleteById(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Xóa thiết bị ID **" + id + "** thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa thiết bịthành công.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Không thể xóa thiết bị ID **" + id + "** vì có phiếu mượn liên quan.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Không thể xóa thiết bị vì có phiếu mượn liên quan.");
         }
 
         return "redirect:/thiet-bi";

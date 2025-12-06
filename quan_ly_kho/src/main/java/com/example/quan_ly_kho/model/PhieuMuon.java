@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -31,8 +32,8 @@ public class PhieuMuon {
     // --- Mối quan hệ với Chi tiết Phiếu Mượn ---
     // Phiếu Mượn (One) có nhiều Chi Tiết (Many)
     // mappedBy trỏ đến trường PhieuMuon trong entity PhieuMuonThietBi
-    @OneToMany(mappedBy = "phieuMuon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PhieuMuonThietBi> chiTietList;
+    @OneToMany(mappedBy = "phieuMuon", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PhieuMuonThietBi> chiTietList = new ArrayList<>();
 
     // Phương thức tiện ích để lấy tên thiết bị hiển thị trên bảng
     // Đây là logic tạm thời, thực tế nên tối ưu hóa truy vấn

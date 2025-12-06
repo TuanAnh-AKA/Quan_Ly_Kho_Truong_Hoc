@@ -3,26 +3,22 @@
 <head th:replace="~{layout :: head}"></head>
 <body>
 
-<!-- Sidebar -->
 <div th:replace="~{layout :: sidebar('lichsu')}"></div>
 
-<!-- Header -->
 <div th:replace="~{layout :: header}"></div>
 
-<!-- Nội dung chính -->
 <div class="content">
 
     <div class="container-fluid p-4">
         <h2 class="mb-4">Lịch Sử Chi Tiết Mượn Trả</h2>
 
-        <!-- Form lọc -->
         <form th:action="@{/lich-su}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
             <div class="col-md-4">
                 <input type="text" class="form-control" name="keyword"
                        th:value="${param.keyword}" placeholder="Tìm theo Mã phiếu hoặc Tên thiết bị...">
             </div>
             <div class="col-md-3">
-                <select class="form-select" name="trangThai" th:value="${param.trangThai}">
+                <select class="form-select" name="trangThai">
                     <option value="">-- Tất cả trạng thái --</option>
                     <option value="Đang mượn"
                             th:selected="${param.trangThai == 'Đang mượn'}">Đang mượn</option>
@@ -37,9 +33,11 @@
                     <i class="bi bi-funnel"></i> Lọc
                 </button>
             </div>
+
+            <input type="hidden" name="size" th:value="${dsLichSuPage.size}">
+            <input type="hidden" name="sort" th:value="${param.sort}">
         </form>
 
-        <!-- Bảng dữ liệu -->
         <div class="table-responsive bg-white p-3 rounded shadow-sm">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
@@ -54,13 +52,13 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="ct : ${dsLichSu}">
+                <tr th:each="ct : ${dsLichSuPage.content}">
                     <td th:text="${ct.phieuMuon.maPhieu}">PM001</td>
                     <td th:text="${ct.phieuMuon.nguoiMuonText}">Nguyễn Văn A</td>
                     <td th:text="${ct.thietBi.tenThietBi}">Máy Chiếu Sony</td>
                     <td th:text="${ct.soLuongMuon}">1</td>
                     <td th:text="${#temporals.format(ct.phieuMuon.ngayMuon, 'yyyy-MM-dd')}">2025-11-10</td>
-                    <td th:text="${ct.ngayTra != null ? #dates.format(ct.ngayTra, 'yyyy-MM-dd') : 'Chưa trả'}">Chưa trả</td>
+                    <td th:text="${ct.ngayTra != null ? #temporals.format(ct.ngayTra, 'yyyy-MM-dd') : 'Chưa trả'}">Chưa trả</td>
                     <td>
                         <span th:class="${ct.trangThai == 'Đang mượn' ? 'badge text-bg-warning' :
                                          (ct.trangThai == 'Đã trả' ? 'badge text-bg-success' : 'badge text-bg-danger')}"
@@ -68,20 +66,65 @@
                     </td>
                 </tr>
 
-                <!-- Nếu danh sách rỗng -->
-                <tr th:if="${#lists.isEmpty(dsLichSu)}">
+                <tr th:if="${#lists.isEmpty(dsLichSuPage.content)}">
                     <td colspan="7" class="text-center text-muted">Không có dữ liệu</td>
                 </tr>
                 </tbody>
             </table>
         </div>
+
+        <div th:if="${dsLichSuPage.totalPages > 0}" class="row mt-4">
+            <div class="col-sm-6">
+                <span th:text="|Trang ${dsLichSuPage.number + 1} / ${dsLichSuPage.totalPages} trang|"></span>
+            </div>
+            <div class="col-sm-6">
+                <nav aria-label="Page navigation" class="float-end">
+                    <ul class="pagination pagination-sm">
+
+                        <li class="page-item" th:classappend="${dsLichSuPage.first} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/lich-su(
+                                   page=${dsLichSuPage.number - 1},
+                                   size=${dsLichSuPage.size},
+                                   sort=${param.sort},
+                                   keyword=${param.keyword},      trangThai=${param.trangThai}    )}"
+                               aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+
+                        <li class="page-item"
+                            th:each="i : ${#numbers.sequence(0, dsLichSuPage.totalPages - 1)}"
+                            th:classappend="${i == dsLichSuPage.number} ? 'active'">
+                            <a class="page-link"
+                               th:href="@{/lich-su(
+                                   page=${i},
+                                   size=${dsLichSuPage.size},
+                                   sort=${param.sort},
+                                   keyword=${param.keyword},      trangThai=${param.trangThai}    )}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+
+                        <li class="page-item" th:classappend="${dsLichSuPage.last} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/lich-su(
+                                   page=${dsLichSuPage.number + 1},
+                                   size=${dsLichSuPage.size},
+                                   sort=${param.sort},
+                                   keyword=${param.keyword},      trangThai=${param.trangThai}    )}"
+                               aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Footer -->
 <div th:replace="~{layout :: footer}"></div>
 
-<!-- Script -->
 <div th:replace="~{layout :: scripts}"></div>
 
 </body>

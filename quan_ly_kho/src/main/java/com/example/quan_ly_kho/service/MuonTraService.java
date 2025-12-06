@@ -10,13 +10,19 @@ import com.example.quan_ly_kho.repository.PhieuMuonRepo;
 import com.example.quan_ly_kho.repository.PhieuMuonThietBiRepo;
 import com.example.quan_ly_kho.repository.ThietBiRepo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +34,7 @@ public class MuonTraService {
     private final PhieuMuonThietBiRepo ctRepo;
     private final ThietBiRepo thietBiRepo;
     private final LoaiThietBiRepo loaiThietBiRepo; // Đã thêm repo mới
+    private final PhieuMuonThietBiRepo phieuMuonThietBiRepo; // Đã thêm repo mới
 
     // --- 1. TRUY VẤN DỮ LIỆU CHO VIEW (READ) ---
 
@@ -185,15 +192,13 @@ public PhieuMuon taoPhieuMuon(Map<Integer, Integer> thietBiMuon,
     /**
      * Lấy danh sách ID thiết bị đang được mượn và chưa trả (Hỗ trợ Controller load form)
      */
-    public List<Integer> findThietBiIdsByPhieuId(Integer phieuId) {
-        PhieuMuon pm = phieuMuonRepo.findById(phieuId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu mượn ID: " + phieuId));
-
-        // Trả về danh sách ID của các thiết bị đang có trong phiếu (ngayTra == null)
-        return pm.getChiTietList().stream()
-                .filter(ct -> ct.getNgayTra() == null) // Chỉ các mục chưa được trả
-                .map(ct -> ct.getThietBi().getId())
-                .collect(Collectors.toList());
+    public Map<Integer, Integer> findThietBiIdsByPhieuId(Integer phieuId) {
+        Map<Integer, Integer> map = new HashMap<>();
+        List<PhieuMuonThietBi> ds = phieuMuonThietBiRepo.findByPhieuMuon_Id(phieuId);
+        for (PhieuMuonThietBi tbm : ds) {
+            map.put(tbm.getThietBi().getId(), tbm.getSoLuongMuon());
+        }
+        return map;
     }
 
 
@@ -204,9 +209,10 @@ public PhieuMuon taoPhieuMuon(Map<Integer, Integer> thietBiMuon,
      * Đây là logic phức tạp vì phải xử lý: GIẢM tồn kho (khi thêm) và TĂNG tồn kho (khi xóa khỏi phiếu)
      */
 
+    @Transactional
     public PhieuMuon capNhatPhieuMuon(PhieuMuonUpdateForm form) {
 
-        // 🚨 Kiểm tra dữ liệu bắt buộc (Do đã bỏ Validation)
+        // --- 1️⃣ Validate dữ liệu cơ bản ---
         if (form.getMaPhieu() == null || form.getMaPhieu().trim().isEmpty()) {
             throw new RuntimeException("Mã phiếu không được để trống.");
         }
@@ -214,69 +220,103 @@ public PhieuMuon taoPhieuMuon(Map<Integer, Integer> thietBiMuon,
             throw new RuntimeException("Tên người mượn không được để trống.");
         }
 
-        PhieuMuon oldPm = phieuMuonRepo.findById(form.getId())
+        // --- 2️⃣ Lấy phiếu mượn cũ từ DB ---
+        PhieuMuon pm = phieuMuonRepo.findById(form.getId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu mượn ID: " + form.getId()));
 
-        if (Boolean.FALSE.equals(oldPm.getTrangThai())) {
+        if (Boolean.FALSE.equals(pm.getTrangThai())) {
             throw new RuntimeException("Không thể cập nhật phiếu mượn đã hoàn tất.");
         }
 
-        // 1. Cập nhật thông tin cơ bản
-        if (!oldPm.getMaPhieu().equals(form.getMaPhieu()) && phieuMuonRepo.existsByMaPhieu(form.getMaPhieu())) {
+        // --- 3️⃣ Kiểm tra trùng mã phiếu (nếu đổi mã) ---
+        if (!pm.getMaPhieu().equals(form.getMaPhieu()) && phieuMuonRepo.existsByMaPhieu(form.getMaPhieu())) {
             throw new RuntimeException("Mã phiếu đã tồn tại.");
         }
-        oldPm.setMaPhieu(form.getMaPhieu());
-        oldPm.setNgayMuon(form.getNgayMuon());
-        oldPm.setNguoiMuonText(form.getNguoiMuonText());
 
-        // Lấy Map ID -> ChiTiet cũ (chỉ các mục chưa trả)
-        Map<Integer, PhieuMuonThietBi> oldDetailsMap = oldPm.getChiTietList().stream()
+        // --- 4️⃣ Cập nhật thông tin cơ bản ---
+        pm.setMaPhieu(form.getMaPhieu());
+        pm.setNgayMuon(form.getNgayMuon());
+        pm.setNguoiMuonText(form.getNguoiMuonText());
+        pm.setTrangThai(form.getTrangThai());
+
+        // --- 5️⃣ Lấy danh sách chi tiết cũ (chưa trả) ---
+        Map<Integer, PhieuMuonThietBi> oldMap = pm.getChiTietList().stream()
                 .filter(ct -> ct.getNgayTra() == null)
                 .collect(Collectors.toMap(ct -> ct.getThietBi().getId(), ct -> ct));
 
-        List<Integer> newThietBiIds = form.getThietBiIds() != null ? form.getThietBiIds() : List.of();
+        // --- 6️⃣ Lấy danh sách mới từ form (ID → Số lượng) ---
+        Map<Integer, Integer> newMap = form.getThietBiIds() != null ? form.getThietBiIds() : Map.of();
 
-        // 2. Xử lý XÓA BỎ (Hoàn trả tồn kho)
-        for (PhieuMuonThietBi oldCt : oldDetailsMap.values()) {
-            Integer oldTbId = oldCt.getThietBi().getId();
-            if (!newThietBiIds.contains(oldTbId)) {
-                // Thiết bị bị xóa khỏi phiếu -> Hoàn trả tồn kho (Giả định số lượng mượn là 1)
+        // --- 7️⃣ Xử lý thiết bị bị xóa khỏi phiếu ---
+        for (PhieuMuonThietBi oldCt : new ArrayList<>(pm.getChiTietList())) {
+            Integer tbId = oldCt.getThietBi().getId();
+
+            if (!newMap.containsKey(tbId) || newMap.get(tbId) == null || newMap.get(tbId) <= 0) {
                 ThietBi tb = oldCt.getThietBi();
                 tb.setSoLuong(tb.getSoLuong() + oldCt.getSoLuongMuon());
                 tb.setDaMuon(tb.getSoLuong() == 0);
                 thietBiRepo.save(tb);
 
-                ctRepo.delete(oldCt); // Xóa chi tiết khỏi phiếu
+                pm.getChiTietList().remove(oldCt); // orphanRemoval sẽ tự xóa trong DB
             }
         }
 
-        // 3. Xử lý THÊM MỚI (Trừ tồn kho, giả định số lượng mượn là 1)
-        for (Integer newTbId : newThietBiIds) {
-            if (!oldDetailsMap.containsKey(newTbId)) {
-                // Thiết bị mới được thêm vào phiếu
-                ThietBi tb = thietBiRepo.findById(newTbId)
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy thiết bị ID: " + newTbId));
+        // --- 8️⃣ Xử lý thêm mới hoặc cập nhật số lượng ---
+        for (Map.Entry<Integer, Integer> entry : newMap.entrySet()) {
+            Integer tbId = entry.getKey();
+            Integer soLuongMoi = entry.getValue();
 
-                if (tb.getSoLuong() < 1) {
-                    throw new RuntimeException("Thiết bị " + tb.getTenThietBi() + " đã hết hàng.");
+            if (soLuongMoi == null || soLuongMoi <= 0) continue;
+
+            ThietBi tb = thietBiRepo.findById(tbId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy thiết bị ID: " + tbId));
+
+            if (oldMap.containsKey(tbId)) {
+                // --- 🔁 Cập nhật số lượng ---
+                PhieuMuonThietBi oldCt = oldMap.get(tbId);
+                int delta = soLuongMoi - oldCt.getSoLuongMuon();
+
+                if (delta > 0) {
+                    if (tb.getSoLuong() < delta) {
+                        throw new RuntimeException("Thiết bị " + tb.getTenThietBi() + " không đủ tồn kho.");
+                    }
+                    tb.setSoLuong(tb.getSoLuong() - delta);
+                } else if (delta < 0) {
+                    tb.setSoLuong(tb.getSoLuong() + Math.abs(delta));
                 }
 
-                // Trừ tồn kho và cập nhật cờ hiệu
-                tb.setSoLuong(tb.getSoLuong() - 1);
-                tb.setDaMuon(true); // Nếu còn 0 chiếc
+                tb.setDaMuon(tb.getSoLuong() == 0);
                 thietBiRepo.save(tb);
 
-                // Tạo chi tiết mới (Giả định số lượng mượn là 1)
+                oldCt.setSoLuongMuon(soLuongMoi);
+                oldCt.setTrangThai(pm.getTrangThai() ? "Đang mượn" : "Đã trả");
+
+            } else {
+                // --- 🆕 Thiết bị mới ---
+                if (tb.getSoLuong() < soLuongMoi) {
+                    throw new RuntimeException("Thiết bị " + tb.getTenThietBi() + " không đủ tồn kho.");
+                }
+
+                tb.setSoLuong(tb.getSoLuong() - soLuongMoi);
+                tb.setDaMuon(tb.getSoLuong() == 0);
+                thietBiRepo.save(tb);
+
                 PhieuMuonThietBi newCt = new PhieuMuonThietBi();
-                newCt.setPhieuMuon(oldPm);
+                newCt.setPhieuMuon(pm);
                 newCt.setThietBi(tb);
-                newCt.setSoLuongMuon(1);
+                newCt.setSoLuongMuon(soLuongMoi);
                 newCt.setTrangThai("Đang mượn");
-                ctRepo.save(newCt);
+
+                pm.getChiTietList().add(newCt);
             }
         }
 
-        return phieuMuonRepo.save(oldPm);
+        // --- 9️⃣ Lưu lại toàn bộ phiếu (cascade tự lưu chi tiết) ---
+        return phieuMuonRepo.save(pm);
+    }
+
+    public Page<PhieuMuon> findAllPhieuMuon(Pageable pageable) {
+        return phieuMuonRepo.findAll(pageable);
     }
     /**
      * Lấy toàn bộ lịch sử chi tiết mượn trả, có thể lọc theo keyword và trạng thái.
@@ -311,5 +351,35 @@ public PhieuMuon taoPhieuMuon(Map<Integer, Integer> thietBiMuon,
 
         // Nếu không có bộ lọc nào được áp dụng
         return allLichSu;
+    }
+    public Page<PhieuMuonThietBi> findLichSu(String keyword, String trangThai, Pageable pageable) {
+
+        Specification<PhieuMuonThietBi> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 1. Lọc theo trạng thái (trangThai)
+            if (trangThai != null && !trangThai.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("trangThai"), trangThai));
+            }
+
+            // 2. Lọc theo từ khóa (keyword)
+            if (keyword != null && !keyword.isEmpty()) {
+                String searchKeyword = "%" + keyword.toLowerCase() + "%";
+
+                // Điều kiện tìm kiếm: theo Mã Phiếu HOẶC Tên Thiết Bị
+                Predicate keywordPredicate = criteriaBuilder.or(
+                        // Tìm theo Mã Phiếu Mượn (JOIN tới PhieuMuon)
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("phieuMuon").get("maPhieu")), searchKeyword),
+                        // Tìm theo Tên Thiết Bị (JOIN tới ThietBi)
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("thietBi").get("tenThietBi")), searchKeyword)
+                );
+                predicates.add(keywordPredicate);
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // Trả về Page đã được lọc và phân trang
+        return phieuMuonThietBiRepo.findAll(spec, pageable);
     }
 }

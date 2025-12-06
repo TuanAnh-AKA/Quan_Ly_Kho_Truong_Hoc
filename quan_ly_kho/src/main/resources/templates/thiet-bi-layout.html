@@ -3,29 +3,26 @@
 <head th:replace="~{layout :: head}"></head>
 <body>
 
-<!-- Sidebar -->
 <div th:replace="~{layout :: sidebar('thietbi')}"></div>
 
-<!-- Header -->
 <div th:replace="~{layout :: header}"></div>
 
-<!-- Nội dung chính -->
 <div class="content">
 
     <div class="container-fluid p-4">
         <h2 class="mb-4">Danh Sách Thiết Bị Tồn Kho</h2>
 
-        <!-- Form lọc tìm kiếm -->
-        <form th:action="@{/thiet-bi/search}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
+        <form th:action="@{/thiet-bi}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
             <div class="col-md-4">
-                <input type="text" class="form-control" name="keyword" placeholder="Tìm theo Mã/Tên thiết bị...">
+                <input type="text" class="form-control" name="keyword" th:value="${param.keyword}" placeholder="Tìm theo Mã/Tên thiết bị...">
             </div>
             <div class="col-md-3">
                 <select class="form-select" name="loaiId">
                     <option value="">-- Tất cả loại --</option>
                     <option th:each="loai : ${dsLoaiThietBi}"
                             th:value="${loai.id}"
-                            th:text="${loai.tenLoai}">
+                            th:text="${loai.tenLoai}"
+                            th:selected="${param.loaiId == loai.id}">
                     </option>
                 </select>
             </div>
@@ -34,9 +31,10 @@
                     <i class="bi bi-funnel"></i> Lọc
                 </button>
             </div>
+            <input type="hidden" name="size" th:value="${thietBiPage.size}">
+            <input type="hidden" name="sort" th:value="${param.sort}">
         </form>
 
-        <!-- Bảng danh sách thiết bị -->
         <div class="table-responsive bg-white p-3 rounded shadow-sm mb-4">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
@@ -51,7 +49,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="tb : ${dsThietBi}">
+                <tr th:each="tb : ${thietBiPage.content}">
                     <td th:text="${tb.maThietBi}">LAP-D5500</td>
                     <td th:text="${tb.tenThietBi}">Laptop Dell 5500</td>
                     <td th:text="${tb.loaiThietBi.tenLoai}">Máy Tính</td>
@@ -73,12 +71,66 @@
                         </a>
                     </td>
                 </tr>
+
+                <tr th:if="${#lists.isEmpty(thietBiPage.content)}">
+                    <td colspan="7" class="text-center text-muted">Không tìm thấy thiết bị nào.</td>
+                </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Nút thêm mới -->
-        <div class="text-end">
+        <div th:if="${thietBiPage.totalPages > 0}" class="row mt-4">
+            <div class="col-sm-6">
+                <span th:text="|Trang ${thietBiPage.number + 1} / ${thietBiPage.totalPages} trang|"></span>
+            </div>
+            <div class="col-sm-6">
+                <nav aria-label="Page navigation" class="float-end">
+                    <ul class="pagination pagination-sm">
+
+                        <li class="page-item" th:classappend="${thietBiPage.first} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/thiet-bi(  page=${thietBiPage.number - 1},
+                                   size=${thietBiPage.size},
+                                   sort=${param.sort},
+                                   keyword=${param.keyword},
+                                   loaiId=${param.loaiId}
+                               )}"
+                               aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+
+                        <li class="page-item"
+                            th:each="i : ${#numbers.sequence(0, thietBiPage.totalPages - 1)}"
+                            th:classappend="${i == thietBiPage.number} ? 'active'">
+                            <a class="page-link"
+                               th:href="@{/thiet-bi(  page=${i},
+                                   size=${thietBiPage.size},
+                                   sort=${param.sort},
+                                   keyword=${param.keyword},
+                                   loaiId=${param.loaiId}
+                               )}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+
+                        <li class="page-item" th:classappend="${thietBiPage.last} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/thiet-bi(  page=${thietBiPage.number + 1},
+                                   size=${thietBiPage.size},
+                                   sort=${param.sort},
+                                   keyword=${param.keyword},
+                                   loaiId=${param.loaiId}
+                               )}"
+                               aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <div class="text-end mt-3">
             <a th:href="@{/thiet-bi/view-update}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Thêm Thiết Bị Mới
             </a>
@@ -86,10 +138,8 @@
     </div>
 </div>
 
-<!-- Footer -->
 <div th:replace="~{layout :: footer}"></div>
 
-<!-- Script -->
 <div th:replace="~{layout :: scripts}"></div>
 
 </body>

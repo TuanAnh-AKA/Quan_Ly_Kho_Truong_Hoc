@@ -4,39 +4,48 @@
 
 <body>
 
-<div th:replace="~{layout :: sidebar('phieu')}"></div> <div th:replace="~{layout :: header}"></div> <div class="content">
+<div th:replace="~{layout :: sidebar('phieu')}"></div>
+<div th:replace="~{layout :: header}"></div>
+
+<div class="content">
 
     <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
     <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
 
     <h2 class="mb-4">Danh Sách Phiếu Mượn</h2>
 
-    <form th:action="@{/phieumuon/search}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
+    <form th:action="@{/phieumuon}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
         <div class="col-md-4">
-            <input type="text" class="form-control" name="keyword" placeholder="Nhập mã phiếu hoặc tên thiết bị...">
+            <input type="text" class="form-control" name="keyword" th:value="${param.keyword}" placeholder="Nhập mã phiếu hoặc tên thiết bị...">
         </div>
         <div class="col-md-2">
-            <input type="date" class="form-control" name="fromDate" placeholder="Từ ngày">
+            <input type="date" class="form-control" name="fromDate" th:value="${param.fromDate}" placeholder="Từ ngày">
         </div>
         <div class="col-md-2">
-            <input type="date" class="form-control" name="toDate" placeholder="Đến ngày">
+            <input type="date" class="form-control" name="toDate" th:value="${param.toDate}" placeholder="Đến ngày">
         </div>
         <div class="col-md-2">
             <select class="form-select" name="loaiId">
                 <option value="">-- Tất cả --</option>
-                <option th:each="loai : ${dsLoaiThietBi}" th:value="${loai.id}" th:text="${loai.tenLoai}"></option>
+                <option th:each="loai : ${dsLoaiThietBi}"
+                        th:value="${loai.id}"
+                        th:text="${loai.tenLoai}"
+                        th:selected="${param.loaiId == loai.id}">
+                </option>
             </select>
         </div>
         <div class="col-md-2">
             <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel"></i> Lọc</button>
         </div>
+
+        <input type="hidden" name="size" th:value="${phieuMuonPage.size}">
+        <input type="hidden" name="sort" th:value="${param.sort}">
     </form>
 
     <div class="table-responsive bg-white p-3 rounded shadow-sm mb-4">
         <table class="table table-hover align-middle">
             <thead class="table-light">
             <tr>
-                <th>ID</th>
                 <th>Mã Phiếu</th>
                 <th>Ngày Mượn</th>
                 <th>Người Mượn</th>
@@ -45,20 +54,20 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="phieu : ${dsPhieuMuon}">
-                <td th:text="${phieu.id}"></td>
+            <tr th:each="phieu : ${phieuMuonPage.content}">
                 <td th:text="${phieu.maPhieu}"></td>
                 <td th:text="${#temporals.format(phieu.ngayMuon, 'yyyy-MM-dd')}"></td>
                 <td th:text="${phieu.nguoiMuonText}"></td>
                 <td>
-                            <span th:text="${phieu.trangThai ? 'Đang Mượn' : 'Đã Trả'}"
-                                  th:class="${phieu.trangThai ? 'badge text-bg-warning' : 'badge text-bg-success'}"></span>
+                    <span th:text="${phieu.trangThai ? 'Đang Mượn' : 'Đã Trả'}"
+                          th:class="${phieu.trangThai ? 'badge text-bg-warning' : 'badge text-bg-success'}"></span>
                 </td>
                 <td>
                     <a th:href="@{/phieumuon/edit/{id}(id=${phieu.id})}" class="btn btn-sm btn-info me-1">
                         <i class="bi bi-pencil-square"></i> Sửa
                     </a>
-                    <a th:if="${phieu.trangThai}" th:href="@{/phieu-muon/return/{id}(id=${phieu.id})}" class="btn btn-sm btn-success me-1">
+                    <a th:if="${phieu.trangThai}" th:href="@{/phieumuon/return/{id}(id=${phieu.id})}" class="btn btn-sm btn-success me-1"
+                       onclick="return confirm('Bạn có chắc chắn muốn xác nhận trả phiếu này?')">
                         <i class="bi bi-arrow-return-left"></i> Trả
                     </a>
                     <a th:href="@{/phieumuon/delete/{id}(id=${phieu.id})}" class="btn btn-sm btn-danger"
@@ -66,12 +75,138 @@
                         <i class="bi bi-trash"></i> Xóa
                     </a>
                 </td>
-            </tr>#temporals.format
+            </tr>
+            <tr th:if="${#lists.isEmpty(phieuMuonPage.content)}">
+                <td colspan="5" class="text-center text-muted">Không tìm thấy phiếu mượn nào.</td>
+            </tr>
             </tbody>
         </table>
     </div>
 
-    <div class="add-form-box p-4 rounded shadow-sm bg-white border">
+    <div th:if="${phieuMuonPage.totalPages > 0}" class="row mt-4">
+        <div class="col-sm-6">
+            <span th:text="|Trang ${phieuMuonPage.number + 1} / ${phieuMuonPage.totalPages} trang|"></span>
+        </div>
+        <div class="col-sm-6">
+            <nav aria-label="Page navigation" class="float-end">
+                <ul class="pagination pagination-sm">
+
+                    <li class="page-item" th:classappend="${phieuMuonPage.first} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/phieumuon(
+                               page=${phieuMuonPage.number - 1},
+                               size=${phieuMuonPage.size},
+                               sort=${param.sort},
+                               keyword=${param.keyword},
+                               fromDate=${param.fromDate},
+                               toDate=${param.toDate},
+                               loaiId=${param.loaiId}
+                           )}"
+                           aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+
+                    <li class="page-item"
+                        th:each="i : ${#numbers.sequence(0, phieuMuonPage.totalPages - 1)}"
+                        th:classappend="${i == phieuMuonPage.number} ? 'active'">
+                        <a class="page-link"
+                           th:href="@{/phieumuon(
+                               page=${i},
+                               size=${phieuMuonPage.size},
+                               sort=${param.sort},
+                               keyword=${param.keyword},
+                               fromDate=${param.fromDate},
+                               toDate=${param.toDate},
+                               loaiId=${param.loaiId}
+                           )}"
+                           th:text="${i + 1}">1</a>
+                    </li>
+
+                    <li class="page-item" th:classappend="${phieuMuonPage.last} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/phieumuon(
+                               page=${phieuMuonPage.number + 1},
+                               size=${phieuMuonPage.size},
+                               sort=${param.sort},
+                               keyword=${param.keyword},
+                               fromDate=${param.fromDate},
+                               toDate=${param.toDate},
+                               loaiId=${param.loaiId}
+                           )}"
+                           aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+
+    <div th:if="${pmUpdateForm}" class="add-form-box p-4 rounded shadow-sm bg-white border border-info">
+        <h3 class="mb-4 text-info">Cập Nhật Phiếu Mượn: <span th:text="${pmUpdateForm.maPhieu}"></span></h3>
+
+        <form th:action="@{/phieumuon/update}" method="post" th:object="${pmUpdateForm}">
+
+            <input type="hidden" th:field="*{id}" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="maPhieu_update" class="form-label">Mã Phiếu</label>
+                    <input type="text" id="maPhieu_update" th:field="*{maPhieu}" class="form-control" required placeholder="Nhập mã phiếu...">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="nguoiMuonText_update" class="form-label">Tên Người Mượn</label>
+                    <input type="text" id="nguoiMuonText_update" th:field="*{nguoiMuonText}" class="form-control" required placeholder="Nhập tên người mượn...">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="ngayMuon_update" class="form-label">Ngày Mượn</label>
+                    <input type="date" id="ngayMuon_update" th:field="*{ngayMuon}" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="trangThai_update" class="form-label">Trạng Thái</label>
+                    <select id="trangThai_update" th:field="*{trangThai}" class="form-select">
+                        <option th:value="true" th:text="Đang Mượn"></option>
+                        <option th:value="false" th:text="Đã Trả"></option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">Cập Nhật Thiết Bị Mượn</h5>
+            <div class="row">
+                <div th:each="tb : ${dsThietBiAll}" class="col-md-4 mb-3">
+                    <div class="d-flex justify-content-between align-items-center p-2 rounded border bg-light">
+                        <label th:for="${'qty_up_' + tb.id}"
+                               class="mb-0 small fw-bold"
+                               th:text="${tb.tenThietBi + ' (Tồn: ' + tb.soLuong + ')'}"></label>
+
+                        <input type="number"
+                               th:id="${'qty_up_' + tb.id}"
+                               th:name="${'thietBiIds[' + tb.id + ']'}"
+                               min="0"
+                               th:max="${tb.soLuong}"
+                               th:value="${pmUpdateForm.thietBiIds != null and pmUpdateForm.thietBiIds[tb.id] != null ? pmUpdateForm.thietBiIds[tb.id] : 0}"
+                               class="form-control form-control-sm"
+                               style="width: 70px;">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-4 w-100">
+                <i class="bi bi-arrow-clockwise"></i> Lưu Cập Nhật
+            </button>
+        </form>
+
+        <a th:href="@{/phieumuon}" class="btn btn-outline-secondary mt-2 w-100">Hủy Cập Nhật</a>
+    </div>
+
+    <div th:if="${phieuMuonForm != null and pmUpdateForm == null}" class="add-form-box p-4 rounded shadow-sm bg-white border">
         <h3 class="mb-4">Thêm Phiếu Mượn</h3>
 
         <form th:action="@{/phieumuon/save}" method="post" th:object="${phieuMuonForm}">
@@ -121,5 +256,8 @@
 
 </div>
 
-<div th:replace="~{layout :: footer}"></div> <div th:replace="~{layout :: scripts}"></div> </body>
+<div th:replace="~{layout :: footer}"></div>
+<div th:replace="~{layout :: scripts}"></div>
+
+</body>
 </html>
