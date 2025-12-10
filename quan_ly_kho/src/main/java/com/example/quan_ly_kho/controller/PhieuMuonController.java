@@ -3,17 +3,24 @@ package com.example.quan_ly_kho.controller;
 import com.example.quan_ly_kho.dto.PhieuMuonForm;
 import com.example.quan_ly_kho.dto.PhieuMuonUpdateForm;
 import com.example.quan_ly_kho.model.PhieuMuon;
+import com.example.quan_ly_kho.model.ThietBi;
 import com.example.quan_ly_kho.repository.ThietBiRepo;
+import com.example.quan_ly_kho.service.LoaiThietBiService;
 import com.example.quan_ly_kho.service.MuonTraService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -23,46 +30,128 @@ public class PhieuMuonController {
 
     private final MuonTraService muonTraService;
     private final ThietBiRepo thietBiRepo;
+    private final LoaiThietBiService loaiThietBiService;
 
-    // --- Phương thức hỗ trợ để load lại các attribute cần thiết cho layout ---
     private void addCommonAttributes(Model model) {
-        model.addAttribute("dsPhieuMuon", muonTraService.findAllPhieuMuon());
+
         model.addAttribute("dsThietBiRanh", muonTraService.dsThietBiRanh());
         model.addAttribute("dsLoaiThietBi", muonTraService.findAllLoaiThietBi());
     }
 
-    // ---------------------------------------------------------------------------------------------------
-
-    // --- 1. HIỂN THỊ DANH SÁCH & FORM TẠO MỚI (GET) ---
     @GetMapping
     public String listPhieuMuon(
             Model model,
-            // Thêm tham số phân trang
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
-            @RequestParam(defaultValue = "id,desc") String sort)
+            @RequestParam(defaultValue = "id,desc") String sort,
+            // THÊM THAM SỐ LỌC
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fromDate, // Đã sửa
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate toDate,   // Đã sửa
+            @RequestParam(required = false) Integer loaiId)
     {
-        // 1. Load các attribute chung (không bao gồm dsPhieuMuon)
+        // 1. Load các attribute chung (dsThietBiRanh, dsLoaiThietBi, etc.)
         addCommonAttributes(model);
 
-        // 2. Xử lý phân trang
+        // 2. Xử lý phân trang và sắp xếp
         String[] sortParams = sort.split(",");
         Sort sortOrder = Sort.by(Sort.Direction.fromString(sortParams[1]), sortParams[0]);
         PageRequest pageable = PageRequest.of(page, size, sortOrder);
 
-        // Lấy dữ liệu đã được phân trang
-        Page<PhieuMuon> phieuMuonPage = muonTraService.findAllPhieuMuon(pageable); // <-- Cần phương thức Service mới
+        // 3. Tải dữ liệu đã được phân trang và lọc (Gọi Service mới)
+        Page<PhieuMuon> phieuMuonPage = muonTraService.searchPhieuMuon(
+                keyword,
+                fromDate,
+                toDate,
+                loaiId,
+                true,
+                pageable);
 
-        // 3. Thêm Page object vào Model
+        // 4. Thêm Page object vào Model
         model.addAttribute("phieuMuonPage", phieuMuonPage);
 
-        // 4. Xử lý form thêm mới (giữ nguyên)
+        // 5. Thêm các tham số lọc vào Model để Thymeleaf có thể giữ lại trạng thái trên form
+        // (Mặc dù Thymeleaf có thể tự động lấy từ 'param', nhưng việc thêm rõ ràng sẽ giúp code dễ đọc và kiểm soát hơn)
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("fromDate", fromDate);
+        model.addAttribute("toDate", toDate);
+        model.addAttribute("loaiId", loaiId);
+
+
+        // 6. Xử lý form thêm mới (giữ nguyên)
         if (!model.containsAttribute("phieuMuonForm")) {
             model.addAttribute("phieuMuonForm", new PhieuMuonForm());
         }
 
-        // Loại bỏ pmUpdateForm nếu có, để chỉ hiển thị form thêm mới
+        // 7. Loại bỏ pmUpdateForm nếu có, để chỉ hiển thị form thêm mới
         model.addAttribute("pmUpdateForm", null);
+
+        return "phieu-muon-layout";
+    }
+    // --- 2. HIỂN THỊ FORM CẬP NHẬT (EDIT) ---
+    @GetMapping("/edit/{id}")
+    public String editPhieuMuon(
+            @PathVariable("id") Integer id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size,
+            // THÊM THAM SỐ LỌC
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fromDate, // Đã sửa
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate toDate,   // Đã sửa
+            @RequestParam(required = false) Integer loaiId,
+            // Đã thêm tham số sắp xếp
+            @RequestParam(defaultValue = "id,desc") String sort,
+            Model model) {
+
+        // 1. Load các attribute chung (Sidebar, Header, Filter dropdown data)
+        addCommonAttributes(model);
+
+        // 2. TẠO PAGEABLE ĐỂ HIỂN THỊ DANH SÁCH (Đã đồng bộ)
+        String[] sortParams = sort.split(",");
+        Sort sortOrder = Sort.by(Sort.Direction.fromString(sortParams[1]), sortParams[0]);
+        PageRequest pageable = PageRequest.of(page, size, sortOrder);
+
+        // Tải dữ liệu danh sách/phân trang với sắp xếp đã đồng bộ
+        Page<PhieuMuon> phieuMuonPage = muonTraService.searchPhieuMuon(
+                keyword,
+                fromDate,
+                toDate,
+                loaiId,
+                true,
+                pageable);
+
+        model.addAttribute("phieuMuonPage", phieuMuonPage);
+
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("fromDate", fromDate);
+        model.addAttribute("toDate", toDate);
+        model.addAttribute("loaiId", loaiId);
+
+        // 3. TẢI DỮ LIỆU PHIẾU MƯỢN ĐỂ CHỈNH SỬA
+        PhieuMuon pm = muonTraService.findPhieuMuonById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu mượn có ID: " + id));
+
+        // ... (Giữ nguyên phần DTO mapping và tải dsThietBiAll) ...
+        PhieuMuonUpdateForm form = new PhieuMuonUpdateForm();
+        form.setId(pm.getId());
+        form.setMaPhieu(pm.getMaPhieu());
+        form.setNgayMuon(pm.getNgayMuon());
+        form.setNguoiMuonText(pm.getNguoiMuonText());
+        form.setTrangThai(pm.getTrangThai());
+        form.setThietBiIds(muonTraService.findThietBiMuonDetails(id));
+
+        List<ThietBi> dsThietBiAll = muonTraService.findAllThietBi();
+
+        // 4. Truyền dữ liệu Form
+        model.addAttribute("pmUpdateForm", form);
+        model.addAttribute("dsThietBiAll", dsThietBiAll);
+
+        // 5. Truyền lại các tham số phân trang/sắp xếp/lọc (Cần thiết cho HTML)
+        model.addAttribute("sort", sort);
+        // ... (Bạn nên truyền thêm các tham số lọc nếu có: keyword, fromDate, toDate, loaiId)
+
+        // Ẩn Form Thêm mới
+        model.addAttribute("phieuMuonForm", null);
 
         return "phieu-muon-layout";
     }
@@ -93,38 +182,39 @@ public class PhieuMuonController {
     }
 
     // ---------------------------------------------------------------------------------------------------
+    private void loadPhieuMuonData(Model model,
+                                   int page,
+                                   int size,
+                                   String sort,
+                                   String keyword,
+                                   LocalDate fromDate,
+                                   LocalDate toDate,
+                                   Integer loaiId) {
 
-    // --- 3. HIỂN THỊ FORM CẬP NHẬT (GET) ---
-    @GetMapping("/edit/{id}")
-    public String editPhieuMuon(@PathVariable("id") Integer id, Model model) {
-        // Load lại các attribute chung cho layout
-        addCommonAttributes(model);
+        // 1. Xử lý phân trang và sắp xếp
+        String[] sortParams = sort.split(",");
+        Sort sortOrder = Sort.by(Sort.Direction.fromString(sortParams[1]), sortParams[0]);
+        PageRequest pageable = PageRequest.of(page, size, sortOrder);
 
-        PhieuMuon pm = muonTraService.findPhieuMuonById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu mượn "));
+        // 2. Tải dữ liệu đã được phân trang và lọc (Gọi Service)
+        Page<PhieuMuon> phieuMuonPage = muonTraService.searchPhieuMuon(
+                keyword,
+                fromDate,
+                toDate,
+                loaiId,
+                true,
+                pageable);
 
-        // Khởi tạo DTO từ Entity
-        PhieuMuonUpdateForm form = new PhieuMuonUpdateForm();
-        form.setId(pm.getId());
-        form.setMaPhieu(pm.getMaPhieu());
-        form.setNgayMuon(pm.getNgayMuon());
-        form.setNguoiMuonText(pm.getNguoiMuonText());
-        form.setTrangThai(pm.getTrangThai());
+        // 3. Thêm Page object vào Model
+        model.addAttribute("phieuMuonPage", phieuMuonPage);
 
-        // Lấy danh sách ID thiết bị đang được mượn
-        form.setThietBiIds(muonTraService.findThietBiIdsByPhieuId(id));
-
-        // FIX 1: Dùng tên **pmUpdateForm** nhất quán cho Form Cập nhật
-        model.addAttribute("pmUpdateForm", form);
-        model.addAttribute("dsThietBiAll", thietBiRepo.findAll()); // Dùng cho form update
-
-        // Đặt phieuMuonForm thành null để chỉ hiển thị form update trong HTML
-        model.addAttribute("phieuMuonForm", null);
-
-        return "phieu-muon-layout";
+        // 4. Thêm các tham số lọc vào Model để Thymeleaf có thể giữ lại trạng thái trên form
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("fromDate", fromDate);
+        model.addAttribute("toDate", toDate);
+        model.addAttribute("loaiId", loaiId);
     }
 
-    // --- 4. XỬ LÝ CẬP NHẬT (POST) ---
     @PostMapping("/update")
     public String updatePhieuMuon(@ModelAttribute("pmUpdateForm") PhieuMuonUpdateForm form,
                                   RedirectAttributes redirectAttributes,
@@ -132,27 +222,33 @@ public class PhieuMuonController {
         try {
             muonTraService.capNhatPhieuMuon(form);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật phiếu mượn **" + form.getMaPhieu() + "** thành công!");
-            return "redirect:/phieumuon"; // Thành công thì chuyển hướng về danh sách
+            return "redirect:/phieumuon";
         } catch (RuntimeException e) {
-            // FIX 2: Khi có lỗi, KHÔNG DÙNG REDIRECT. Dùng Model và return view trực tiếp.
+            // --- 1. Xử lý lỗi ---
             model.addAttribute("errorMessage", "Lỗi cập nhật: " + e.getMessage());
 
-            // Thêm lại các attribute cần thiết cho form (ds thiết bị, form data)
+            // --- 2. Tải lại dữ liệu cho FORM CẬP NHẬT ---
+            // Giữ lại dữ liệu form đã nhập
             model.addAttribute("pmUpdateForm", form);
-            model.addAttribute("dsThietBiAll", thietBiRepo.findAll());
+            // Tải lại danh sách thiết bị đầy đủ
+            // Lưu ý: Nếu dsThietBiAll không phải là thuộc tính chung, bạn cần tải nó ở đây
+            // model.addAttribute("dsThietBiAll", thietBiRepo.findAll());
 
-            // Load lại các attribute chung cho layout
+            // --- 3. Tải lại DỮ LIỆU CHUNG và PHÂN TRANG cho LAYOUT ---
+            // Tải lại dsThietBiRanh, dsLoaiThietBi
             addCommonAttributes(model);
 
-            // Đặt phieuMuonForm thành null để tiếp tục hiển thị form update
+            // Tải lại PHIEUMUONPAGE để khắc phục lỗi "phieuMuonPage.size" is null
+            // Đặt mặc định về trang 0, 6 mục/trang, sắp xếp id,desc
+            loadPhieuMuonData(model, 0, 6, "id,desc", null, null, null, null);
+
+            // Loại bỏ form thêm mới để chỉ hiển thị form sửa
             model.addAttribute("phieuMuonForm", null);
 
-            return "phieu-muon-layout"; // Trả về view để hiển thị lỗi và dữ liệu đã nhập
+            return "phieu-muon-layout";
         }
     }
 
-    // ---------------------------------------------------------------------------------------------------
-    // --- Các chức năng khác giữ nguyên ---
 
     // --- 5. XỬ LÝ TRẢ PHIẾU (UPDATE/RETURN) ---
     @GetMapping("/return/{id}")

@@ -48,7 +48,11 @@ private TaiKhoanDetailsService taiKhoanDetailsService; // Inject service đã t�
 
                 // Cấu hình Logout
                 .logout(logout -> logout
-                        .permitAll()
+                        .logoutUrl("/logout") // Đảm bảo URL này khớp với th:action
+                        .logoutSuccessUrl("/login?logout") // Chuyển hướng sau khi đăng xuất thành công
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+
                 );
 
         return http.build();

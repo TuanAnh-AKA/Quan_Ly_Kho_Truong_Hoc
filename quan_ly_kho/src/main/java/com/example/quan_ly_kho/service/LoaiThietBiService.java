@@ -2,6 +2,9 @@ package com.example.quan_ly_kho.service;
 
 import com.example.quan_ly_kho.model.LoaiThietBi;
 import com.example.quan_ly_kho.repository.LoaiThietBiRepo;
+import com.example.quan_ly_kho.repository.ThietBiRepo;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,31 +12,14 @@ import java.util.List;
 import java.util.Optional; // Cần import cho findById
 
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class LoaiThietBiService {
+    private final LoaiThietBiRepo loaiThietBiRepo;
+    private final ThietBiRepo thietBiRepo; // 🚨 Dùng để kiểm tra ràng buộc
+    private final LoaiThietBiRepo loaiThietBiRepository;
 
-    @Autowired
-    private LoaiThietBiRepo loaiThietBiRepository;
 
-    /**
-     * 1. Thêm Loại Thiết Bị (Cập nhật logic kiểm tra trùng lặp cho cả Thêm và Sửa)
-     */
-    public LoaiThietBi themLoaiThietBi(LoaiThietBi loai) {
-        // 1. Kiểm tra tính hợp lệ
-        if (loai.getTenLoai() == null || loai.getTenLoai().trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên loại thiết bị không được để trống.");
-        }
-
-        // 2. Kiểm tra trùng lặp (Chỉ báo lỗi nếu tên đã tồn tại VÀ không phải là chính đối tượng đang được sửa)
-        Optional<LoaiThietBi> existingLoai = loaiThietBiRepository.findByTenLoai(loai.getTenLoai());
-
-        if (existingLoai.isPresent() && !existingLoai.get().getId().equals(loai.getId())) {
-            throw new RuntimeException("Loại thiết bị '" + loai.getTenLoai() + "' đã tồn tại.");
-        }
-
-        // 3. Thêm/Cập nhật vào CSDL
-        // JpaRepository.save() sẽ tự động thực hiện INSERT nếu ID null hoặc UPDATE nếu ID có giá trị.
-        return loaiThietBiRepository.save(loai);
-    }
 
     /**
      * 2. Lấy danh sách tất cả loại thiết bị
@@ -53,18 +39,39 @@ public class LoaiThietBiService {
                 .orElseThrow(() -> new RuntimeException("Loại thiết bị với ID " + id + " không tồn tại."));
     }
 
-    /**
-     * 4. Xóa Loại Thiết Bị theo ID
-     */
-    public void deleteById(Integer id) {
-        // Kiểm tra xem đối tượng có tồn tại không trước khi xóa (tùy chọn)
-        if (!loaiThietBiRepository.existsById(id)) {
-            throw new RuntimeException("Không tìm thấy Loại Thiết Bị có ID " + id + " để xóa.");
+    public List<LoaiThietBi> findAll() {
+        return loaiThietBiRepo.findAll();
+    }
+
+    // --- 1. THÊM MỚI/CẬP NHẬT LOẠI THIẾT BỊ ---
+    public LoaiThietBi save(LoaiThietBi loaiThietBi) {
+        // Kiểm tra tên trùng lặp (khi thêm)
+        if (loaiThietBi.getId() == null) {
+            if (loaiThietBiRepo.existsByTenLoai(loaiThietBi.getTenLoai())) {
+                throw new RuntimeException("Tên loại thiết bị đã tồn tại: " + loaiThietBi.getTenLoai());
+            }
+        }
+        // Kiểm tra tên trùng lặp (khi sửa)
+        else {
+            if (loaiThietBiRepo.existsByTenLoaiAndIdNot(loaiThietBi.getTenLoai(), loaiThietBi.getId())) {
+                throw new RuntimeException("Tên loại thiết bị đã tồn tại: " + loaiThietBi.getTenLoai());
+            }
+        }
+        return loaiThietBiRepo.save(loaiThietBi);
+    }
+
+    // --- 2. XÓA LOẠI THIẾT BỊ (CÓ KIỂM TRA RÀNG BUỘC) ---
+    public void delete(Integer id) {
+        // 🚨 QUY TẮC BẮT BUỘC: KHÔNG XÓA NẾU ĐANG CÓ THIẾT BỊ SỬ DỤNG
+        if (thietBiRepo.countByLoaiThietBi_Id(id) > 0) {
+            throw new RuntimeException("Không thể xóa. Loại thiết bị này đang được sử dụng bởi ít nhất một thiết bị.");
         }
 
-        // Cần xem xét thêm logic kiểm tra: Loại thiết bị này có đang được sử dụng bởi Thiết Bị nào không?
-        // Nếu có, bạn nên ném ngoại lệ để ngăn chặn việc xóa FK đang liên kết.
+        loaiThietBiRepo.deleteById(id);
+    }
 
-        loaiThietBiRepository.deleteById(id);
+    // Hàm tìm theo ID (dùng cho form sửa)
+    public Optional<LoaiThietBi> findById2(Integer id) {
+        return loaiThietBiRepo.findById(id);
     }
 }

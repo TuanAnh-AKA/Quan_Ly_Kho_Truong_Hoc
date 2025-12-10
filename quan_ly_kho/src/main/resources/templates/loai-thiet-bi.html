@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body>
+
+<div th:replace="~{layout :: sidebar('Loại thiết bị')}"></div>
+<div th:replace="~{layout :: header}"></div>
+
+<div class="content">
+    <div class="container-fluid p-4">
+
+        <h2 class="mb-4">Quản Lý Loại Thiết Bị</h2>
+
+        <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
+
+        <div class="row">
+            <div class="col-md-7">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        Danh Sách Loại Thiết Bị
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên Loại</th>
+                                <th>Hành Động</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="loai : ${dsLoaiThietBi}">
+                                <td th:text="${loai.id}"></td>
+                                <td th:text="${loai.tenLoai}"></td>
+                                <td>
+                                    <a th:href="@{/loai-thiet-bi/edit/{id}(id=${loai.id})}"
+                                       class="btn btn-sm btn-warning me-2">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                    <a th:href="@{/loai-thiet-bi/delete/{id}(id=${loai.id})}"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Bạn có chắc chắn muốn xóa loại thiết bị này? Hành động này không thể hoàn tác nếu không có thiết bị nào sử dụng.')">
+                                        <i class="bi bi-trash"></i> Xóa
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <span th:if="${loaiThietBiForm.id == null}">Thêm Mới</span>
+                        <span th:unless="${loaiThietBiForm.id == null}">Cập Nhật Loại Thiết Bị ID: <span th:text="${loaiThietBiForm.id}"></span></span>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/loai-thiet-bi/save}" method="post" th:object="${loaiThietBiForm}">
+
+                            <input type="hidden" th:field="*{id}">
+
+                            <div class="mb-3">
+                                <label for="tenLoai" class="form-label">Tên Loại Thiết Bị</label>
+                                <input type="text" id="tenLoai" th:field="*{tenLoai}" class="form-control" required placeholder="Ví dụ: Máy Chiếu, Dụng Cụ Thí Nghiệm...">
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100">
+                                <span th:if="*{id == null}">Thêm Mới</span>
+                                <span th:unless="*{id == null}">Cập Nhật</span>
+                            </button>
+
+                            <div th:if="*{id != null}" class="mt-2">
+                                <a th:href="@{/loai-thiet-bi}" class="btn btn-outline-secondary w-100">Hủy Bỏ / Thêm Mới</a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div th:replace="~{layout :: footer}"></div>
+<div th:replace="~{layout :: scripts}"></div>
+
+</body>
+</html>

@@ -41,6 +41,7 @@ public class ThietBiService {
             existing.setLoaiThietBi(thietBi.getLoaiThietBi());
             existing.setNgayNhap(thietBi.getNgayNhap());
             existing.setNhaCungCap(thietBi.getNhaCungCap());
+            existing.setTinhTrang(thietBi.getTinhTrang());
 
 
             return thietBiRepository.save(existing);
@@ -48,7 +49,7 @@ public class ThietBiService {
 
         // Nếu thêm mới
 
-        thietBi.setTinhTrang(true);
+
         thietBi.setDaMuon(false);
         return thietBiRepository.save(thietBi);
     }
@@ -76,17 +77,29 @@ public class ThietBiService {
     /**
      * Xóa Thiết Bị theo ID
      */
-    public void deleteById(Integer id) {
-        // Nên kiểm tra logic nghiệp vụ: Thiết bị này có đang được mượn không?
-        ThietBi thietBi = findById(id);
-        if (thietBi.getDaMuon() != null && thietBi.getDaMuon()) {
-            throw new RuntimeException("Không thể xóa thiết bị đang được mượn.");
+    public void deleteThietBi(Integer thietBiId) {
+
+        // 1. KIỂM TRA: Thiết bị có đang được mượn không?
+        long activeLoans = thietBiRepository.countActiveLoanDetails(thietBiId);
+
+        if (activeLoans > 0) {
+            // Ném ra Exception tùy chỉnh
+            throw new IllegalStateException("Không thể xóa thiết bị đang được mượn" );
         }
 
-        thietBiRepository.deleteById(id);
+        // 2. Nếu không có phiếu mượn đang hoạt động, tiến hành xóa
+        thietBiRepository.deleteById(thietBiId);
     }
 
     public Page<ThietBi> findAllThietBi(Pageable pageable) {
         return thietBiRepository.findAll(pageable);
+    }
+    public Page<ThietBi> searchThietBi(
+            String keyword,
+            Integer loaiId,
+            Boolean tinhTrang,
+            Pageable pageable) {
+
+        return thietBiRepository.searchThietBi(keyword, loaiId, tinhTrang, pageable);
     }
 }

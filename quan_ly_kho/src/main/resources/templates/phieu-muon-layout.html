@@ -16,7 +16,7 @@
 
     <form th:action="@{/phieumuon}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
         <div class="col-md-4">
-            <input type="text" class="form-control" name="keyword" th:value="${param.keyword}" placeholder="Nhập mã phiếu hoặc tên thiết bị...">
+            <input type="text" class="form-control" name="keyword" th:value="${param.keyword}" placeholder="Nhập mã phiếu hoặc người mượn...">
         </div>
         <div class="col-md-2">
             <input type="date" class="form-control" name="fromDate" th:value="${param.fromDate}" placeholder="Từ ngày">
@@ -30,7 +30,7 @@
                 <option th:each="loai : ${dsLoaiThietBi}"
                         th:value="${loai.id}"
                         th:text="${loai.tenLoai}"
-                        th:selected="${param.loaiId == loai.id}">
+                        th:selected="${loaiId != null and loaiId == loai.id}">
                 </option>
             </select>
         </div>
@@ -170,8 +170,8 @@
                 <div class="col-md-6">
                     <label for="trangThai_update" class="form-label">Trạng Thái</label>
                     <select id="trangThai_update" th:field="*{trangThai}" class="form-select">
-                        <option th:value="true" th:text="Đang Mượn"></option>
-                        <option th:value="false" th:text="Đã Trả"></option>
+                        <option th:value="true" th:text="'Đang Mượn'"></option>
+                        <option th:value="false" th:text="'Đã Trả'"></option>
                     </select>
                 </div>
             </div>

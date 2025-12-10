@@ -34,30 +34,39 @@ public class ThietBiController {
     @GetMapping
     public String listThietBi(
             Model model,
-            // 1. Tham số phân trang (mặc định trang 0, 10 phần tử)
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "8") int size,
-            // 2. Tham số sắp xếp (mặc định theo ID giảm dần)
-            @RequestParam(defaultValue = "id,desc") String sort)
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id,desc") String sort,
+            // --- THAM SỐ LỌC ---
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer loaiId,
+            @RequestParam(required = false) Boolean tinhTrang)
     {
-        // Phân tích tham số sắp xếp (ví dụ: id,desc)
+        // 1. Xử lý phân trang và sắp xếp
         String[] sortParams = sort.split(",");
         Sort sortOrder = Sort.by(Sort.Direction.fromString(sortParams[1]), sortParams[0]);
-
-        // Tạo đối tượng Pageable
         PageRequest pageable = PageRequest.of(page, size, sortOrder);
 
-        // Gọi Service để lấy dữ liệu đã được phân trang
-        Page<ThietBi> thietBiPage = thietBiService.findAllThietBi(pageable); // <-- Cần phương thức này trong Service
+        // 2. Tải dữ liệu đã được phân trang và lọc
+        Page<ThietBi> thietBiPage = thietBiService.searchThietBi(
+                keyword,
+                loaiId,
+                tinhTrang,
+                pageable);
 
-            // Thêm Page object vào Model với tên "thietBiPage"
-        model.addAttribute("thietBiPage", thietBiPage);
-
-        // Vẫn giữ lại danh sách loại thiết bị và đối tượng form mới
+        // 3. Tải danh sách Loại Thiết Bị (cho bộ lọc dropdown)
         model.addAttribute("dsLoaiThietBi", loaiThietBiRepo.findAll());
-        model.addAttribute("thietBi", new ThietBi());
 
-        return "thiet-bi-layout";
+        // 4. Thêm Page object và các tham số lọc vào Model
+        model.addAttribute("thietBiPage", thietBiPage);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("loaiId", loaiId);
+        model.addAttribute("tinhTrang", tinhTrang);
+
+        // 5. Thêm đối tượng form mới (cho chức năng thêm/sửa)
+        // model.addAttribute("thietBiForm", new ThietBiForm()); // Cần thay bằng DTO của bạn
+
+        return "thiet-bi-layout"; // Giả định tên trang HTML là thiet-bi-layout.html
     }
 
     // --- 2. XỬ LÝ TÌM KIẾM/LỌC (SEARCH) ---
@@ -148,8 +157,8 @@ public class ThietBiController {
     @GetMapping("/delete/{id}")
     public String deleteThietBi(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
         try {
-            thietBiRepo.deleteById(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Xóa thiết bịthành công.");
+            thietBiService.deleteThietBi(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa thiết bị thành công.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Không thể xóa thiết bị vì có phiếu mượn liên quan.");
         }

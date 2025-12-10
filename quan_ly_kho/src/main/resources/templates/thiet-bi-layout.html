@@ -10,27 +10,42 @@
 <div class="content">
 
     <div class="container-fluid p-4">
+        <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
         <h2 class="mb-4">Danh Sách Thiết Bị Tồn Kho</h2>
 
         <form th:action="@{/thiet-bi}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
+
             <div class="col-md-4">
-                <input type="text" class="form-control" name="keyword" th:value="${param.keyword}" placeholder="Tìm theo Mã/Tên thiết bị...">
+                <input type="text" class="form-control" name="keyword" th:value="${keyword}"
+                       placeholder="Tìm theo Mã/Tên thiết bị...">
             </div>
+
             <div class="col-md-3">
                 <select class="form-select" name="loaiId">
                     <option value="">-- Tất cả loại --</option>
                     <option th:each="loai : ${dsLoaiThietBi}"
                             th:value="${loai.id}"
                             th:text="${loai.tenLoai}"
-                            th:selected="${param.loaiId == loai.id}">
+                            th:selected="${loaiId != null and loaiId == loai.id}">
                     </option>
                 </select>
             </div>
+
+            <div class="col-md-3">
+                <select class="form-select" name="tinhTrang">
+                    <option value="">-- Tất cả Tình trạng --</option>
+                    <option value="true" th:text="'Tốt'" th:selected="${tinhTrang != null and tinhTrang == true}"></option>
+                    <option value="false" th:text="'Bảo trì'" th:selected="${tinhTrang != null and tinhTrang == false}"></option>
+                </select>
+            </div>
+
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-funnel"></i> Lọc
                 </button>
             </div>
+
             <input type="hidden" name="size" th:value="${thietBiPage.size}">
             <input type="hidden" name="sort" th:value="${param.sort}">
         </form>

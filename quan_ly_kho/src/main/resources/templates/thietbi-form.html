@@ -9,6 +9,8 @@
 
 <div class="content">
     <div class="container mt-5">
+
+
         <h2 class="mb-4" th:text="${thietBi.id != null ? '📝 Cập Nhật Thiết Bị' : '➕ Thêm Thiết Bị Mới'}"></h2>
 
         <form th:action="@{/thiet-bi/save}" th:object="${thietBi}" method="post" class="needs-validation" novalidate>
@@ -59,7 +61,14 @@
                     </select>
                     <div class="invalid-feedback">Vui lòng chọn một Loại Thiết Bị.</div>
                 </div>
-
+                <div class="col-md-6">
+                    <label for="tinhTrang" class="form-label">Tình Trạng (<span class="text-danger">*</span>)</label>
+                    <select th:field="*{tinhTrang}" id="tinhTrang" class="form-select" required>
+                        <option value="true">Tốt</option>
+                        <option value="false">Bảo trì</option>
+                    </select>
+                    <div class="invalid-feedback">Vui lòng chọn Tình Trạng Thiết Bị.</div>
+                </div>
                 <div class="col-12">
                     <label for="moTa" class="form-label">Mô tả</label>
                     <textarea th:field="*{moTa}" class="form-control" id="moTa" rows="3"></textarea>

@@ -58,6 +58,11 @@
     <a th:href="@{/thiet-bi}" th:classappend="${activePage == 'thietbi'} ? 'active' : ''">
         <i class="bi bi-pc-display"></i> <span>Thiết Bị</span>
     </a>
+    <li class="nav-item">
+        <a class="nav-link" th:href="@{/loai-thiet-bi}">
+            <i class="bi bi-tags"></i>  Loại Thiết Bị
+        </a>
+    </li>
 
     <a th:href="@{/lich-su}" th:classappend="${activePage == 'lichsu'} ? 'active' : ''">
         <i class="bi bi-clock-history"></i> <span>Lịch Sử Mượn Trả</span>
@@ -66,10 +71,18 @@
 
 <div th:fragment="header" class="main-header">
     <div class="brand">Trang quản lý</div>
+
     <div class="user-info">
         <i class="bi bi-person-circle"></i>
         <span>Xin chào</span>,
-        <strong th:text="${#authentication.name}">Quản trị viên</strong> </div>
+        <strong th:text="${#authentication.name}">Quản trị viên</strong>
+
+        <form th:action="@{/logout}" method="post" style="display: inline-block; margin-left: 15px;">
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-box-arrow-right"></i> Đăng Xuất
+            </button>
+        </form>
+    </div>
 </div>
 
 <div th:fragment="content" class="content">
