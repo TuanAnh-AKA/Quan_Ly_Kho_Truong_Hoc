@@ -1,0 +1,43 @@
+services:
+  # 1. Triển khai PostgreSQL Database
+  - type: psql
+    name: school-inventory-db
+    plan: free
+    databaseName: school_inventory
+    user: school_admin
+
+  # 2. Triển khai Spring Boot Web Service
+  - type: web
+    name: school-inventory-app
+    env: java
+    plan: free
+    # Vui lòng thay thế bằng URL kho Git của bạn (Ví dụ: https://github.com/tenban/quan_ly_kho)
+    repo: https://github.com/TuanAnh-AKA/Quan_Ly_Kho_Truong_Hoc.git
+    branch: main
+
+    # Lệnh Build (dùng Maven Wrapper)
+    buildCommand: ./mvnw clean install -DskipTests
+
+    # Lệnh Khởi chạy CHÍNH XÁC dựa trên pom.xml của bạn:
+    startCommand: java -jar target/quan_ly_kho-0.0.1-SNAPSHOT.jar
+
+    # Thiết lập biến môi trường
+    envVars:
+      # Render sẽ tự động điền chuỗi kết nối Database vào đây
+      - key: DATABASE_URL
+        fromDatabase:
+          name: school-inventory-db
+          property: connectionString
+      # Đây là biến Spring Boot cần đọc
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: school-inventory-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: school-inventory-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: school-inventory-db
+          property: password
