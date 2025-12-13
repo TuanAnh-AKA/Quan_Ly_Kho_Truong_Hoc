@@ -1,13 +1,13 @@
 services:
   # PostgreSQL Database Service
-  - type: pserv
+  - type: postgres
     name: school-inventory-db
     plan: free
 
   # Spring Boot Web Service
   - type: web
     name: school-inventory-app
-    env: java
+    env: docker
     plan: free
 
     repo: https://github.com/TuanAnh-AKA/Quan_Ly_Kho_Truong_Hoc.git
