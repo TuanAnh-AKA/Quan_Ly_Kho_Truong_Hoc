@@ -1,6 +1,6 @@
 services:
   # 1. Triển khai PostgreSQL Database
-  - type: psql
+  - type: postgres
     name: school-inventory-db
     plan: free
     databaseName: school_inventory
