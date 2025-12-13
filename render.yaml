@@ -1,13 +1,8 @@
 services:
-  # PostgreSQL Database Service
-  - type: postgres
-    name: school-inventory-db
-    plan: free
 
-  # Spring Boot Web Service
   - type: web
     name: school-inventory-app
-    env: docker
+    env: java
     plan: free
 
     repo: https://github.com/TuanAnh-AKA/Quan_Ly_Kho_Truong_Hoc.git
@@ -16,16 +11,3 @@ services:
     buildCommand: ./mvnw clean install -DskipTests
     startCommand: java -jar target/quan_ly_kho-0.0.1-SNAPSHOT.jar
 
-    envVars:
-      - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: school-inventory-db
-          property: connectionString
-      - key: SPRING_DATASOURCE_USERNAME
-        fromDatabase:
-          name: school-inventory-db
-          property: user
-      - key: SPRING_DATASOURCE_PASSWORD
-        fromDatabase:
-          name: school-inventory-db
-          property: password
