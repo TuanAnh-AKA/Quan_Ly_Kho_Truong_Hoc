@@ -1,5 +1,5 @@
-# Sử dụng base image (môi trường) chứa Java 17
-FROM openjdk:17-jdk-slim AS build
+# Sử dụng Eclipse Temurin (Khuyến nghị)
+FROM eclipse-temurin:17-jdk-jammy AS build
 
 # Đặt thư mục làm việc (working directory)
 WORKDIR /app
@@ -10,7 +10,6 @@ COPY .mvn .mvn
 COPY pom.xml .
 
 # Build dự án (chỉ build dependencies để tăng tốc độ cache Docker)
-# Lệnh này sẽ chạy maven build
 RUN ./mvnw dependency:go-offline
 
 # Sao chép toàn bộ mã nguồn vào container
@@ -21,10 +20,10 @@ RUN ./mvnw clean install -DskipTests
 
 # ----------------------------------------------------
 # Giai đoạn 2: Tạo image nhẹ hơn để chạy (Runtime Image)
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre-jammy # Sử dụng JRE nhẹ hơn cho Runtime
 
 # Đặt biến môi trường cho Spring Boot để chạy file JAR
-ENV JAR_FILE=quan_ly_kho-0.0.1-SNAPSHOT.jar
+ENV JAR_FILE=quan_ly_kho-0.0.1-SNAPSHOT.jar # KIỂM TRA LẠI TÊN FILE JAR NÀY
 ENV PORT=8080
 
 # Sao chép file JAR đã build từ giai đoạn 'build'
