@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b3a3be01-0658-4dc8-92aa-ce14dff44bb4" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="package-info" />
+        <option value="Interface" />
+        <option value="HTML File" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+    <option name="UPDATE_TYPE" value="REBASE" />
+  </component>
+  <component name="ProjectId" id="35ShxMVNqNU41Wwr5Zg9FbJ7rpx" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
+    <property name="RequestMappingsPanelOrder0" value="0" />
+    <property name="RequestMappingsPanelOrder1" value="1" />
+    <property name="RequestMappingsPanelWidth0" value="75" />
+    <property name="RequestMappingsPanelWidth1" value="75" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="CLASS" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="QuanLyKhoApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="quan_ly_kho" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.quan_ly_kho.QuanLyKhoApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b3a3be01-0658-4dc8-92aa-ce14dff44bb4" name="Default Changelist" comment="" />
+      <created>1763109626529</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1763109626529</updated>
+      <workItem from="1763109627988" duration="10294000" />
+      <workItem from="1763521366727" duration="6376000" />
+      <workItem from="1763979458032" duration="15000" />
+      <workItem from="1764315720780" duration="2309000" />
+      <workItem from="1764318410965" duration="221000" />
+      <workItem from="1764318833682" duration="39000" />
+      <workItem from="1764318881167" duration="716000" />
+      <workItem from="1764329899721" duration="118000" />
+      <workItem from="1764386172508" duration="8070000" />
+      <workItem from="1764565504870" duration="794000" />
+      <workItem from="1764748931722" duration="7372000" />
+      <workItem from="1764833341790" duration="12485000" />
+      <workItem from="1764940047818" duration="17238000" />
+      <workItem from="1765179420144" duration="4068000" />
+      <workItem from="1765198930373" duration="27955000" />
+      <workItem from="1765634626381" duration="1854000" />
+    </task>
+    <task id="LOCAL-00001" summary="giao diện">
+      <created>1764565535543</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1764565535543</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Lịch sử mượn trả, CRUD thiết bị">
+      <created>1764925841950</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1764925841950</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Sửa lỗi và thêm phần xuất Excel">
+      <created>1765356396949</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1765356396949</updated>
+    </task>
+    <task id="LOCAL-00004" summary="deploy onli">
+      <created>1765635849291</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1765635849291</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="giao diện" />
+    <MESSAGE value="Lịch sử mượn trả, CRUD thiết bị" />
+    <MESSAGE value="Sửa lỗi và thêm phần xuất Excel" />
+    <MESSAGE value="deploy onli" />
+    <option name="LAST_COMMIT_MESSAGE" value="deploy onli" />
+  </component>
+</project>
