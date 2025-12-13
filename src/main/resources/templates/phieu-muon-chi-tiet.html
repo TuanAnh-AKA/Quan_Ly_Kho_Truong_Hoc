@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body>
+
+<div th:replace="~{layout :: sidebar('lichsu')}"></div>
+<div th:replace="~{layout :: header}"></div>
+
+<div class="content">
+    <div class="container-fluid p-4">
+
+        <h2 class="mb-4">Chi Tiết Phiếu Mượn</h2>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0" th:text="'Mã Phiếu: ' + ${phieuMuon.maPhieu}"></h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Người Mượn:</strong> <span th:text="${phieuMuon.nguoiMuonText}"></span></p>
+                        <p><strong>Ngày Mượn:</strong> <span th:text="${#temporals.format(phieuMuon.ngayMuon, 'dd-MM-yyyy')}"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Trạng Thái Phiếu:</strong>
+                            <span th:text="${phieuMuon.trangThai ? 'Đang Mượn' : 'Đã Trả Hết'}"
+                                  th:class="${phieuMuon.trangThai ? 'badge text-bg-warning' : 'badge text-bg-success'}">
+                            </span>
+                        </p>
+                        <p><strong>Tổng Thiết Bị Mượn:</strong>
+                            <span th:text="${#aggregates.sum(phieuMuon.chiTietList.![soLuongMuon])}"></span>
+                        </p>
+                    </div>
+                </div>
+                <a th:href="@{/lich-su}" class="btn btn-secondary btn-sm mt-3">
+                    <i class="bi bi-arrow-left"></i> Quay lại Lịch Sử
+                </a>
+            </div>
+        </div>
+
+        <h3 class="mb-3">Danh Sách Thiết Bị Mượn</h3>
+        <div class="table-responsive bg-white p-3 rounded shadow-sm">
+            <table class="table table-striped align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Tên Thiết Bị</th>
+                    <th>Loại</th>
+                    <th>SL Mượn</th>
+                    <th>Ngày Trả Dự Kiến</th>
+                    <th>Ngày Thực Trả</th>
+                    <th>Trạng Thái Chi Tiết</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="ct : ${phieuMuon.chiTietList}">
+                    <td th:text="${ct.thietBi.tenThietBi}"></td>
+                    <td th:text="${ct.thietBi.loaiThietBi.tenLoai}"></td>
+                    <td th:text="${ct.soLuongMuon}"></td>
+
+                    <td>N/A</td>
+
+                    <td th:text="${ct.ngayTra != null ? #temporals.format(ct.ngayTra, 'dd-MM-yyyy') : 'Chưa trả'}"></td>
+                    <td>
+                            <span th:text="${ct.trangThai}"
+                                  th:class="${ct.trangThai == 'Đang mượn' ? 'badge text-bg-danger' : 'badge text-bg-success'}">
+                            </span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(phieuMuon.chiTietList)}">
+                    <td colspan="6" class="text-center text-muted">Phiếu mượn này không có chi tiết thiết bị.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<div th:replace="~{layout :: footer}"></div>
+<div th:replace="~{layout :: scripts}"></div>
+
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body>
+
+<div th:replace="~{layout :: sidebar('lichsu')}"></div>
+
+<div th:replace="~{layout :: header}"></div>
+
+<div class="content">
+
+    <div class="container-fluid p-4">
+        <h2 class="mb-4">Lịch Sử Mượn Trả Tổng Hợp</h2>
+
+        <form th:action="@{/lich-su}" method="get" class="row g-3 p-3 bg-white rounded shadow-sm mb-4">
+
+            <h5 class="mb-3">Bộ Lọc Phiếu Mượn</h5>
+
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="keyword"
+                       th:value="${keyword}" placeholder="Tìm theo Mã phiếu, Tên người mượn...">
+            </div>
+
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="fromDate"
+                       placeholder="Từ ngày" th:value="${fromDate}">
+            </div>
+
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="toDate"
+                       placeholder="Đến ngày" th:value="${toDate}">
+            </div>
+
+            <div class="col-md-3">
+                <select class="form-select" name="trangThaiFilter">
+                    <option value="" th:selected="${trangThaiFilter == null OR trangThaiFilter.isEmpty()}">-- Tất cả trạng thái --</option>
+                    <option value="DANG_MUON"
+                            th:selected="${trangThaiFilter == 'DANG_MUON'}">Đang Mượn</option>
+                    <option value="DA_TRA"
+                            th:selected="${trangThaiFilter == 'DA_TRA'}">Đã Trả</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Lọc
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a th:href="@{/lich-su/export/excel(
+            keyword=${keyword},
+            fromDate=${fromDate},
+            toDate=${toDate},
+            trangThaiFilter=${trangThaiFilter}
+        )}" class="btn btn-success w-100">
+                    <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+                </a>
+            </div>
+            <input type="hidden" name="size" th:value="${lichSuPage.size}">
+            <input type="hidden" name="sort" th:value="${param.sort}">
+        </form>
+        <div class="table-responsive bg-white p-3 rounded shadow-sm">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Mã Phiếu</th>
+                    <th>Người Mượn</th>
+                    <th>Ngày Mượn</th>
+                    <th>Tổng SL Mượn</th>
+                    <th>Trạng Thái Phiếu</th>
+                    <th>Hành Động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="phieu : ${lichSuPage.content}">
+                    <td th:text="${phieu.maPhieu}"></td>
+                    <td th:text="${phieu.nguoiMuonText}"></td>
+                    <td th:text="${#temporals.format(phieu.ngayMuon, 'yyyy-MM-dd')}"></td>
+
+                    <td>
+                        <span th:text="${#aggregates.sum(phieu.chiTietList.![soLuongMuon])}"></span>
+                    </td>
+
+                    <td>
+                        <span th:text="${phieu.trangThai ? 'Đang Mượn' : 'Đã Trả Hết'}"
+                              th:class="${phieu.trangThai ? 'badge text-bg-warning' : 'badge text-bg-success'}">
+                        </span>
+                    </td>
+
+                    <td>
+                        <a th:href="@{/lich-su/chi-tiet/{id}(id=${phieu.id})}" class="btn btn-sm btn-info me-1">
+                            <i class="bi bi-eye"></i> Chi Tiết
+                        </a>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(lichSuPage.content)}">
+                    <td colspan="6" class="text-center text-muted">Không có dữ liệu</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${lichSuPage.totalPages > 0}" class="row mt-4">
+            <div class="col-sm-6">
+                <span th:text="|Trang ${lichSuPage.number + 1} / ${lichSuPage.totalPages} trang|"></span>
+            </div>
+            <div class="col-sm-6">
+                <nav aria-label="Page navigation" class="float-end">
+                    <ul class="pagination pagination-sm">
+
+                        <li class="page-item" th:classappend="${lichSuPage.first} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/lich-su(
+                                   page=${lichSuPage.number - 1},
+                                   size=${lichSuPage.size},
+                                   sort=${param.sort},
+                                   keyword=${keyword},
+                                   fromDate=${fromDate},
+                                   toDate=${toDate},
+                                   loaiId=${loaiId}
+                               )}"
+                               aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+
+                        <li class="page-item"
+                            th:each="i : ${#numbers.sequence(0, lichSuPage.totalPages - 1)}"
+                            th:classappend="${i == lichSuPage.number} ? 'active'">
+                            <a class="page-link"
+                               th:href="@{/lich-su(
+                                   page=${i},
+                                   size=${lichSuPage.size},
+                                   sort=${param.sort},
+                                   keyword=${keyword},
+                                   fromDate=${fromDate},
+                                   toDate=${toDate},
+                                   loaiId=${loaiId}
+                               )}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+
+                        <li class="page-item" th:classappend="${lichSuPage.last} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/lich-su(
+                                   page=${lichSuPage.number + 1},
+                                   size=${lichSuPage.size},
+                                   sort=${param.sort},
+                                   keyword=${keyword},
+                                   fromDate=${fromDate},
+                                   toDate=${toDate},
+                                   loaiId=${loaiId}
+                               )}"
+                               aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{layout :: footer}"></div>
+
+<div th:replace="~{layout :: scripts}"></div>
+
+</body>
+</html>
