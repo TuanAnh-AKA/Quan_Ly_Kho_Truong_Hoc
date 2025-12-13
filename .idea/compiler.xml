@@ -8,10 +8,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="quan_ly_kho" />
+        <module name="Quan_Ly_Kho_Truong_Hoc" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="quan_ly_kho" target="17" />
+      <module name="Quan_Ly_Kho_Truong_Hoc" target="17" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
