@@ -1,7 +1,6 @@
 services:
   # PostgreSQL Database Service
   - type: pserv
-    runtime: postgres
     name: school-inventory-db
     plan: free
 
