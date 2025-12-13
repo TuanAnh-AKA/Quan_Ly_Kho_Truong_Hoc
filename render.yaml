@@ -1,6 +1,7 @@
 services:
   # PostgreSQL Database Service
   - type: postgres
+    # Bắt đầu thụt lề vào 2 khoảng trắng so với dòng '- type: postgres'
     name: school-inventory-db
     plan: free
     databaseName: school_inventory
@@ -8,11 +9,12 @@ services:
 
   # Spring Boot Web Service
   - type: web
+    # Bắt đầu thụt lề vào 2 khoảng trắng so với dòng '- type: web'
     name: school-inventory-app
     env: java
     plan: free
 
-    # Replace with your GitHub/GitLab repository URL
+    # Thay thế bằng URL kho Git của bạn
     repo: https://github.com/TuanAnh-AKA/Quan_Ly_Kho_Truong_Hoc.git
     branch: main
 
@@ -24,6 +26,7 @@ services:
 
     # Environment Variables for DB connection
     envVars:
+      # LƯU Ý: Các mục con của envVars (như key) phải thụt lề tiếp
       - key: DATABASE_URL
         fromDatabase:
           name: school-inventory-db
