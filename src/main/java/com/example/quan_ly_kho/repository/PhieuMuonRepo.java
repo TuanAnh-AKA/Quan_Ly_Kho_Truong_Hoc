@@ -40,8 +40,8 @@ public interface PhieuMuonRepo extends JpaRepository<PhieuMuon, Integer>, JpaSpe
     )
     Page<PhieuMuon> searchPhieuMuon(
             @Param("keyword") String keyword,
-            @Param("fromDate") java.time.LocalDate fromDate,
-            @Param("toDate") java.time.LocalDate toDate,
+            @Param("fromDate") java.util.Date fromDate,
+            @Param("toDate") java.util.Date toDate,
             @Param("loaiId") Integer loaiId,
             @Param("trangThaiMuon") Boolean trangThaiMuon, // Re-added: Tham số lọc trạng thái
             Pageable pageable);

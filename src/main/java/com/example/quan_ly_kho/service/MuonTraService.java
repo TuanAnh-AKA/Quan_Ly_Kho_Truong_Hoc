@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import jakarta.persistence.criteria.Predicate;
+
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
@@ -356,17 +358,32 @@ public PhieuMuon taoPhieuMuon(Map<Integer, Integer> thietBiMuon,
     public Map<Integer, Integer> findThietBiMuonDetails(Integer phieuId) {
         // Sử dụng lại logic đã có:
         return findThietBiIdsByPhieuId(phieuId);
-    }
-    public Page<PhieuMuon> searchPhieuMuon(
+    }public Page<PhieuMuon> searchPhieuMuon(
             String keyword,
-            LocalDate fromDate, // Đã sửa
-            LocalDate toDate,   // Đã sửa
+            LocalDate fromDate, // NHẬN VÀO: LocalDate
+            LocalDate toDate,   // NHẬN VÀO: LocalDate
             Integer loaiId,
-            Boolean trangThaiMuon, // Thêm tham số
+            Boolean trangThaiMuon,
             Pageable pageable) {
 
-        // Gọi phương thức mới trong Repository
-        return phieuMuonRepo.searchPhieuMuon(keyword, fromDate, toDate, loaiId, trangThaiMuon,pageable);
+        // --- LOGIC CHUYỂN ĐỔI NGÀY THÁNG ĐỂ TRUYỀN CHO REPO ---
+
+        Date startDate = null;
+        Date endDate = null;
+
+        if (fromDate != null) {
+            // Chuyển LocalDate thành java.util.Date tại thời điểm BẮT ĐẦU NGÀY (00:00:00)
+            startDate = Date.from(fromDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        }
+
+        if (toDate != null) {
+            // Chuyển LocalDate thành java.util.Date tại thời điểm KẾT THÚC NGÀY (23:59:59.999)
+            // Điều này đảm bảo tất cả các phiếu mượn trong ngày toDate đều được bao gồm.
+            endDate = Date.from(toDate.atTime(23, 59, 59, 999_000_000).atZone(ZoneId.systemDefault()).toInstant());
+        }
+
+        // --- Gọi Repository với kiểu Date đã chuyển đổi ---
+        return phieuMuonRepo.searchPhieuMuon(keyword, startDate, endDate, loaiId, trangThaiMuon, pageable);
     }
     public Page<PhieuMuonThietBi> findLichSu(
             String keyword,
