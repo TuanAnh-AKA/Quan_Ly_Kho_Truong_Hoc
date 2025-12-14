@@ -16,7 +16,7 @@ import java.util.Optional;
 public interface ThietBiRepo extends JpaRepository<ThietBi, Integer> {
 
     // Được sử dụng trong MuonTraService.dsThietBiRanh()
-    List<ThietBi> findBySoLuongGreaterThan(Integer soLuong);
+    List<ThietBi> findBySoLuongGreaterThanAndTinhTrangTrue(Integer soLuong);
     List<ThietBi> findByTenThietBiContainingIgnoreCaseOrMaThietBiContainingIgnoreCase(String ten, String ma);
     Optional<ThietBi> findByMaThietBi(String maThietBi);
     @Query("SELECT tb FROM ThietBi tb " +
@@ -42,4 +42,5 @@ public interface ThietBiRepo extends JpaRepository<ThietBi, Integer> {
             "WHERE ctm.thietBi.id = :thietBiId AND (ctm.trangThai <> 'Đã trả')")
     long countActiveLoanDetails(@Param("thietBiId") Integer thietBiId);
     long countByLoaiThietBi_Id(Integer loaiId); // 🚨 HÀM MỚI BẮT BUỘC
+    List<ThietBi> findByTinhTrangTrue();
 }

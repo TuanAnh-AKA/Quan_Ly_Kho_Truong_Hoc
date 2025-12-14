@@ -44,8 +44,8 @@ public class MuonTraService {
     }
 
     public List<ThietBi> dsThietBiRanh() {
-        // Lấy danh sách Thiết Bị có tồn kho > 0
-        return thietBiRepo.findBySoLuongGreaterThan(0);
+
+        return thietBiRepo.findBySoLuongGreaterThanAndTinhTrangTrue(0);
     }
 
     public List<LoaiThietBi> findAllLoaiThietBi() {
@@ -347,7 +347,7 @@ public PhieuMuon taoPhieuMuon(Map<Integer, Integer> thietBiMuon,
      * Lấy tất cả Thiết Bị (Cần cho form Cập nhật/Form chi tiết)
      */
     public List<ThietBi> findAllThietBi() {
-        return thietBiRepo.findAll();
+        return thietBiRepo.findByTinhTrangTrue();
     }
 
     /**
