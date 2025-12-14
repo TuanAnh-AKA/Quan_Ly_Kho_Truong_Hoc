@@ -18,6 +18,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="Quan_Ly_Kho_Truong_Hoc" options="-parameters" />
       <module name="quan_ly_kho" options="-parameters" />
     </option>
   </component>

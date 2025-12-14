@@ -22,7 +22,8 @@ public class ForgotPasswordService {
     private DatLaiMatKhauOTPRepository otpRepository;
 
     @Autowired
-    private JavaMailSender mailSender; // Component gửi mail
+    private SendGridEmailService emailService;
+
 
     @Autowired
     private PasswordEncoder passwordEncoder; // <-- Dòng cần thêm
@@ -56,12 +57,13 @@ public class ForgotPasswordService {
     }
 
     private void sendOtpEmail(String toEmail, String otp) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Mã Xác Thực Đặt Lại Mật Khẩu");
-        message.setText("Mã OTP của bạn là: " + otp + ". Mã này sẽ hết hạn sau 5 phút.");
-        mailSender.send(message);
+        try {
+            emailService.sendOtpEmail(toEmail, otp);
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi khi gửi OTP đến " + toEmail + ": " + e.getMessage());
+        }
     }
+
 
     /**
      * Bước 2: Xác thực Mã OTP
