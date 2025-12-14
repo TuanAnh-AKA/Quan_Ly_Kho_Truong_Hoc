@@ -9,6 +9,8 @@ import com.example.quan_ly_kho.repository.LoaiThietBiRepo;
 import com.example.quan_ly_kho.repository.PhieuMuonRepo;
 import com.example.quan_ly_kho.repository.PhieuMuonThietBiRepo;
 import com.example.quan_ly_kho.repository.ThietBiRepo;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -358,32 +360,57 @@ public PhieuMuon taoPhieuMuon(Map<Integer, Integer> thietBiMuon,
     public Map<Integer, Integer> findThietBiMuonDetails(Integer phieuId) {
         // Sử dụng lại logic đã có:
         return findThietBiIdsByPhieuId(phieuId);
-    }public Page<PhieuMuon> searchPhieuMuon(
+    }
+    // Trong MuonTraService.java
+
+    public Page<PhieuMuon> searchPhieuMuon(
             String keyword,
-            LocalDate fromDate, // NHẬN VÀO: LocalDate
-            LocalDate toDate,   // NHẬN VÀO: LocalDate
+            LocalDate fromDate,
+            LocalDate toDate,
             Integer loaiId,
-            Boolean trangThaiMuon,
-            Pageable pageable) {
+            boolean trangThaiMuon, // Sử dụng tham số boolean của Controller
+            Pageable pageable)
+    {
 
-        // --- LOGIC CHUYỂN ĐỔI NGÀY THÁNG ĐỂ TRUYỀN CHO REPO ---
+        Specification<PhieuMuon> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        Date startDate = null;
-        Date endDate = null;
+            // 🚨 1. Lọc theo TRẠNG THÁI (tham số bắt buộc: true)
+            // Luôn lọc theo trạng thái = true (Đang Mượn)
+            predicates.add(criteriaBuilder.equal(root.get("trangThai"), trangThaiMuon));
 
-        if (fromDate != null) {
-            // Chuyển LocalDate thành java.util.Date tại thời điểm BẮT ĐẦU NGÀY (00:00:00)
-            startDate = Date.from(fromDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        }
+            // 2. Lọc theo TỪ KHÓA (GIỮ NGUYÊN logic đã kiểm tra)
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String searchKeyword = "%" + keyword.trim().toLowerCase() + "%";
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("maPhieu")), searchKeyword),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("nguoiMuonText")), searchKeyword)
+                ));
+            }
 
-        if (toDate != null) {
-            // Chuyển LocalDate thành java.util.Date tại thời điểm KẾT THÚC NGÀY (23:59:59.999)
-            // Điều này đảm bảo tất cả các phiếu mượn trong ngày toDate đều được bao gồm.
-            endDate = Date.from(toDate.atTime(23, 59, 59, 999_000_000).atZone(ZoneId.systemDefault()).toInstant());
-        }
+            // 3. Lọc theo NGÀY MƯỢN/NGÀY TRẢ (SỬ DỤNG LOGIC AN TOÀN CỦA LỊCH SỬ)
+            if (fromDate != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("ngayMuon"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("ngayMuon"), toDate));
+            }
 
-        // --- Gọi Repository với kiểu Date đã chuyển đổi ---
-        return phieuMuonRepo.searchPhieuMuon(keyword, startDate, endDate, loaiId, trangThaiMuon, pageable);
+            // 4. Lọc theo LOẠI THIẾT BỊ (Cần Join nếu bạn không dùng @Query)
+            if (loaiId != null) {
+                // Cần join tới ChiTietList -> ThietBi -> LoaiThietBi
+                Join<PhieuMuon, PhieuMuonThietBi> chiTietJoin = root.join("chiTietList", JoinType.INNER);
+                Join<PhieuMuonThietBi, ThietBi> thietBiJoin = chiTietJoin.join("thietBi", JoinType.INNER);
+                Join<ThietBi, LoaiThietBi> loaiThietBiJoin = thietBiJoin.join("loaiThietBi", JoinType.INNER);
+
+                predicates.add(criteriaBuilder.equal(loaiThietBiJoin.get("id"), loaiId));
+                query.distinct(true); // Tránh trùng lặp
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return phieuMuonRepo.findAll(spec, pageable);
     }
     public Page<PhieuMuonThietBi> findLichSu(
             String keyword,
